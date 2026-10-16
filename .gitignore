@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+**/.env.local
+
+# Generated dependencies and build output
+**/node_modules/
+**/target/
+**/dist/
+
+# Local database files
+backend/data/

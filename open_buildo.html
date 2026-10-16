@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Opening BuildO...</title>
+  <meta http-equiv="refresh" content="0; url=http://localhost:8080/">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #070a12;
+      color: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    .card {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      padding: 2.5rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      max-width: 460px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #ffffff;
+    }
+    span.brand {
+      color: #22d3ee;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(to right, #06b6d4, #2563eb);
+      color: #020617;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 0.75rem;
+      margin: 0.35rem;
+      transition: transform 0.15s;
+    }
+    .btn:hover {
+      transform: scale(1.03);
+    }
+    .btn-outline {
+      background: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Opening Build<span class="brand">O</span> Platform</h1>
+    <p>If you are not redirected automatically within a second, click below to open:</p>
+    <a href="http://localhost:8080/" class="btn">Open Main App (Port 8080)</a>
+    <a href="http://localhost:5173/" class="btn btn-outline">Open Dev App (Port 5173)</a>
+  </div>
+  <script>
+    window.location.href = "http://localhost:8080/";
+  </script>
+</body>
+</html>

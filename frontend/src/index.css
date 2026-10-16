@@ -1,0 +1,922 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #070a12;
+    background-image: 
+      radial-gradient(circle at 50% 15%, rgba(6, 182, 212, 0.14) 0%, transparent 60%),
+      linear-gradient(to bottom, rgba(7, 10, 18, 0.70), rgba(11, 16, 28, 0.82)),
+      url('/desk-setup.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: #f1f5f9;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070a10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Glassmorphism effects with enhanced backdrop blur and contrast */
+.glass-panel {
+  background: rgba(11, 16, 28, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-interactive {
+  background: rgba(11, 16, 28, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease,
+              background-color 0.35s ease;
+  will-change: transform;
+}
+
+.glass-panel-interactive:hover {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: rgba(6, 182, 212, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -10px rgba(6, 182, 212, 0.25);
+}
+
+/* Feature Path Cards: Build It Yourself & Pick A Preset */
+.card-path-builder {
+  position: relative;
+  background: linear-gradient(135deg, rgba(11, 16, 28, 0.88) 0%, rgba(8, 25, 42, 0.85) 100%);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease;
+  will-change: transform;
+}
+
+.card-path-builder:hover {
+  transform: translateY(-6px) scale(1.012);
+  border-color: rgba(34, 211, 238, 0.65);
+  box-shadow: 0 24px 50px -12px rgba(6, 182, 212, 0.35),
+              0 0 25px rgba(6, 182, 212, 0.15);
+}
+
+.card-path-preset {
+  position: relative;
+  background: linear-gradient(135deg, rgba(11, 16, 28, 0.88) 0%, rgba(20, 16, 45, 0.85) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease;
+  will-change: transform;
+}
+
+.card-path-preset:hover {
+  transform: translateY(-6px) scale(1.012);
+  border-color: rgba(129, 140, 248, 0.65);
+  box-shadow: 0 24px 50px -12px rgba(99, 102, 241, 0.35),
+              0 0 25px rgba(99, 102, 241, 0.15);
+}
+
+/* Micro-interaction lift */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+/* Floating breathing keyframe animation */
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-float-subtle {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
+/* Login screen entrance and ambient motion */
+.login-grid {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+@keyframes login-enter-panel {
+  from { opacity: 0; transform: translateY(22px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes login-enter-side {
+  from { opacity: 0; transform: translateX(-20px) scale(0.99); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes login-enter-form {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes login-orb-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(38px, -18px, 0) scale(1.12); }
+}
+
+.animate-login-panel { animation: login-enter-panel 650ms cubic-bezier(0.2, 0.75, 0.25, 1) both; }
+.animate-login-side { animation: login-enter-side 800ms cubic-bezier(0.2, 0.75, 0.25, 1) both; }
+.animate-login-form { animation: login-enter-form 420ms cubic-bezier(0.2, 0.75, 0.25, 1) both; }
+.animate-login-orb { animation: login-orb-drift 11s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-login-panel,
+  .animate-login-side,
+  .animate-login-form,
+  .animate-login-orb {
+    animation: none !important;
+  }
+}
+
+/* BuildO customer flows follow the same charcoal and lime system as the refreshed homepage. */
+.buildo-shop-page {
+  position: relative;
+  isolation: isolate;
+  color: #f5f6ef;
+  animation: storefront-page-in 420ms ease-out both;
+}
+
+.buildo-shop-page::before {
+  position: absolute;
+  z-index: -1;
+  inset: -1rem -100vw;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 78% 4%, rgba(216, 255, 67, 0.065), transparent 34%),
+    radial-gradient(ellipse at 8% 56%, rgba(216, 255, 67, 0.035), transparent 36%);
+}
+
+@keyframes storefront-page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.buildo-page-eyebrow {
+  display: inline-block;
+  color: #d8ff43;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.buildo-shop-page .glass-panel,
+.buildo-shop-page .glass-panel-interactive {
+  background-color: rgba(18, 20, 15, 0.88);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.18);
+}
+
+.buildo-shop-page [class*="text-cyan-"],
+.buildo-shop-page [class*="text-blue-"],
+.buildo-shop-page [class*="text-purple-"] {
+  color: #d8ff43 !important;
+}
+
+.buildo-shop-page [class*="bg-cyan-"],
+.buildo-shop-page [class*="bg-blue-"],
+.buildo-shop-page [class*="bg-purple-"] {
+  background-color: rgba(216, 255, 67, 0.09) !important;
+}
+
+.buildo-shop-page [class*="border-cyan-"],
+.buildo-shop-page [class*="border-blue-"],
+.buildo-shop-page [class*="border-purple-"] {
+  border-color: rgba(216, 255, 67, 0.24) !important;
+}
+
+.buildo-shop-page [class*="bg-gradient-to-r"][class*="from-cyan-"],
+.buildo-shop-page [class*="bg-gradient-to-tr"][class*="from-cyan-"] {
+  background-image: linear-gradient(110deg, #d8ff43, #c7ed39) !important;
+  color: #171910 !important;
+}
+
+.buildo-shop-page [class~="bg-cyan-500"] {
+  background-color: #d8ff43 !important;
+  color: #171910 !important;
+}
+
+.buildo-shop-page [class*="hover:border-cyan-"]:hover,
+.buildo-shop-page [class*="hover:border-blue-"]:hover {
+  border-color: rgba(216, 255, 67, 0.62) !important;
+}
+
+.buildo-shop-page input:focus,
+.buildo-shop-page select:focus,
+.buildo-shop-page textarea:focus {
+  border-color: rgba(216, 255, 67, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(216, 255, 67, 0.11);
+}
+
+.buildo-presets-page .glass-panel-interactive {
+  transition: border-color 240ms ease, transform 380ms cubic-bezier(0.2, 0.75, 0.25, 1), box-shadow 380ms ease;
+}
+
+.buildo-presets-page .glass-panel-interactive:hover {
+  transform: translateY(-4px);
+  border-color: rgba(216, 255, 67, 0.34);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+}
+
+.buildo-presets-page .glass-panel-interactive img {
+  transition: transform 650ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.buildo-presets-page .glass-panel-interactive:hover img {
+  transform: scale(1.035);
+}
+
+.buildo-builder-page .glass-panel:hover,
+.buildo-cart-page .glass-panel:hover,
+.buildo-orders-page .glass-panel:hover {
+  border-color: rgba(216, 255, 67, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buildo-shop-page,
+  .buildo-presets-page .glass-panel-interactive,
+  .buildo-presets-page .glass-panel-interactive img {
+    animation: none;
+    transition: none;
+  }
+
+  .buildo-presets-page .glass-panel-interactive:hover {
+    transform: none;
+  }
+}
+
+/* BuildO admin workspace shares the storefront's dark and lime visual system. */
+.buildo-admin-shell {
+  position: relative;
+  isolation: isolate;
+  background: #10110d;
+  color: #f5f6ef;
+}
+
+.buildo-admin-shell::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(216, 255, 67, 0.075), transparent 34%),
+    radial-gradient(ellipse at 92% 44%, rgba(216, 255, 67, 0.045), transparent 38%);
+}
+
+.buildo-admin {
+  position: relative;
+  color: #f5f6ef;
+}
+
+.buildo-admin > * {
+  animation: admin-content-enter 560ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.buildo-admin > *:nth-child(2) { animation-delay: 70ms; }
+.buildo-admin > *:nth-child(3) { animation-delay: 130ms; }
+.buildo-admin > *:nth-child(4) { animation-delay: 190ms; }
+
+@keyframes admin-content-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.buildo-admin .glass-panel {
+  background: rgba(18, 20, 15, 0.88);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.16);
+}
+
+.buildo-admin [class*="text-cyan-"],
+.buildo-admin [class*="text-blue-"],
+.buildo-admin [class*="text-purple-"] {
+  color: #d8ff43 !important;
+}
+
+.buildo-admin [class*="bg-cyan-"],
+.buildo-admin [class*="bg-blue-"],
+.buildo-admin [class*="bg-purple-"] {
+  background-color: rgba(216, 255, 67, 0.09) !important;
+}
+
+.buildo-admin [class*="border-cyan-"],
+.buildo-admin [class*="border-blue-"],
+.buildo-admin [class*="border-purple-"] {
+  border-color: rgba(216, 255, 67, 0.25) !important;
+}
+
+.buildo-admin [class*="bg-gradient-to-r"][class*="from-cyan-"] {
+  background-image: linear-gradient(110deg, #d8ff43, #c7f23d) !important;
+  color: #171910 !important;
+}
+
+.buildo-admin [class*="from-purple-950"] {
+  background-image: linear-gradient(110deg, rgba(216, 255, 67, 0.08), rgba(18, 20, 15, 0.92), rgba(18, 20, 15, 0.98)) !important;
+}
+
+.buildo-admin [class*="hover:border-cyan-"]:hover,
+.buildo-admin [class*="hover:border-purple-"]:hover {
+  border-color: rgba(216, 255, 67, 0.58) !important;
+}
+
+.buildo-admin input:focus,
+.buildo-admin select:focus,
+.buildo-admin textarea:focus {
+  border-color: rgba(216, 255, 67, 0.68) !important;
+  box-shadow: 0 0 0 3px rgba(216, 255, 67, 0.11);
+}
+
+.buildo-admin table thead {
+  background: #171912;
+}
+
+.buildo-admin table th {
+  color: rgba(238, 240, 228, 0.62);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buildo-admin > * {
+    animation: none;
+  }
+}
+
+/* Glow effects */
+.glow-cyan {
+  box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.3);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+}
+
+.glow-amber {
+  box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.3);
+}
+
+.glow-rose {
+  box-shadow: 0 0 25px -5px rgba(244, 63, 94, 0.3);
+}
+
+/* BuildO homepage: dark, softly lit background and reduced-motion-aware reveals. */
+.home-page {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  background: #10110d;
+  color: #f5f6ef;
+}
+
+.home-page::before {
+  position: fixed;
+  z-index: -1;
+  inset: -22vh -16vw;
+  content: "";
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 76% 20%, rgba(216, 255, 67, 0.075), transparent 34%),
+    radial-gradient(ellipse at 8% 62%, rgba(151, 177, 42, 0.055), transparent 33%),
+    radial-gradient(ellipse at 72% 88%, rgba(63, 80, 28, 0.12), transparent 36%);
+  animation: home-ambient-drift 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes home-ambient-drift {
+  from { transform: translate3d(-1.2%, 0, 0) scale(1); }
+  to { transform: translate3d(1.2%, -1.5%, 0) scale(1.035); }
+}
+
+.home-hero,
+.home-section {
+  position: relative;
+  isolation: isolate;
+  background-color: transparent;
+}
+
+.home-hero::before,
+.home-how::before,
+.home-paths::before,
+.home-builds::before,
+.home-cta::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.home-hero::before {
+  background: radial-gradient(ellipse at 82% 48%, rgba(216, 255, 67, 0.045), transparent 46%);
+}
+
+.home-how::before {
+  background: radial-gradient(ellipse at 94% 48%, rgba(216, 255, 67, 0.055), transparent 38%);
+}
+
+.home-paths::before {
+  background: radial-gradient(ellipse at 6% 66%, rgba(216, 255, 67, 0.06), transparent 38%);
+}
+
+.home-builds::before {
+  background: radial-gradient(ellipse at 82% 58%, rgba(216, 255, 67, 0.045), transparent 42%);
+}
+
+.home-cta::before {
+  background: radial-gradient(ellipse at 50% 54%, rgba(216, 255, 67, 0.075), transparent 54%);
+}
+
+.home-hero-visual img {
+  transform: scale(1.015);
+  transition: transform 900ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.home-hero-visual:hover img {
+  transform: scale(1.045);
+}
+
+.home-hero-image-glow {
+  background: linear-gradient(90deg, rgba(16, 17, 13, 0.62), rgba(16, 17, 13, 0));
+  animation: home-image-glow 7s ease-in-out infinite alternate;
+}
+
+.home-hero-catalog {
+  animation: home-card-float 6s ease-in-out infinite;
+}
+
+.home-hero-confidence {
+  animation: home-card-float 7s ease-in-out -2s infinite;
+}
+
+@keyframes home-image-glow {
+  from { opacity: 0.52; }
+  to { opacity: 0.9; }
+}
+
+@keyframes home-card-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.home-path-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 300ms ease, transform 500ms cubic-bezier(0.2, 0.75, 0.25, 1), box-shadow 500ms ease;
+}
+
+.home-path-card-dark {
+  background: linear-gradient(145deg, #171912 0%, #12130f 72%);
+}
+
+.home-path-card-lime {
+  border-color: rgba(216, 255, 67, 0.7);
+  background: #d8ff43;
+}
+
+.home-path-card-lime::after {
+  position: absolute;
+  top: -38px;
+  right: -34px;
+  width: 190px;
+  height: 190px;
+  content: "";
+  pointer-events: none;
+  border: 1px solid rgba(23, 25, 16, 0.09);
+  border-radius: 999px;
+  box-shadow: 0 0 0 30px rgba(23, 25, 16, 0.035), 0 0 0 62px rgba(23, 25, 16, 0.025);
+}
+
+.home-path-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.2);
+}
+
+.home-reveal {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 700ms cubic-bezier(0.2, 0.75, 0.25, 1),
+    transform 800ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition-delay: var(--home-reveal-delay, 0ms);
+}
+
+.home-reveal[data-home-reveal="left"] {
+  transform: translate3d(-22px, 0, 0);
+}
+
+.home-reveal[data-home-reveal="right"] {
+  transform: translate3d(22px, 0, 0);
+}
+
+.home-reveal.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.home-path-card.home-reveal.is-visible:hover,
+.home-preset-card.home-reveal.is-visible:hover {
+  transform: translate3d(0, -5px, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page::before {
+    animation: none;
+  }
+
+  .home-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .home-hero-visual img,
+  .home-path-card,
+  .home-hero-image-glow,
+  .home-hero-catalog,
+  .home-hero-confidence {
+    transition: none;
+    animation: none;
+  }
+
+  .home-path-card:hover,
+  .home-hero-visual:hover img {
+    transform: none;
+  }
+}
+
+/* Customer application routes share the current BuildO Make palette and motion. */
+.buildo-app-shell {
+  isolation: isolate;
+  min-height: 100vh;
+  overflow-x: clip;
+  background: #10110d;
+  color: #f5f6ef;
+}
+
+.buildo-navbar {
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
+}
+
+.buildo-nav-link.is-active,
+.buildo-cart-nav.is-active {
+  border: 1px solid rgba(216, 255, 67, 0.55);
+  background: rgba(216, 255, 67, 0.1);
+  color: #d8ff43;
+}
+
+.buildo-mobile-nav {
+  animation: buildo-menu-enter 180ms ease-out both;
+  transform-origin: top center;
+}
+
+@keyframes buildo-menu-enter {
+  from { opacity: 0; transform: translateY(-7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.buildo-shop-page {
+  animation: storefront-page-in 460ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.buildo-shop-page > :first-child h1 {
+  letter-spacing: -0.065em;
+}
+
+.buildo-shop-page .glass-panel,
+.buildo-shop-page .glass-panel-interactive {
+  border-radius: 1.5rem;
+}
+
+.buildo-builder-page .glass-panel,
+.buildo-checkout-page .glass-panel,
+.buildo-cart-page .glass-panel,
+.buildo-orders-page .glass-panel {
+  background: rgba(22, 24, 18, 0.88);
+  border-color: rgba(255, 255, 255, 0.095);
+}
+
+.buildo-builder-page .glass-panel-interactive,
+.buildo-presets-page .glass-panel-interactive,
+.buildo-cart-page .glass-panel,
+.buildo-orders-page .glass-panel {
+  transition: transform 320ms cubic-bezier(0.2, 0.75, 0.25, 1), border-color 260ms ease, box-shadow 320ms ease;
+}
+
+.buildo-cart-page .glass-panel:hover,
+.buildo-orders-page .glass-panel:hover,
+.buildo-builder-page .glass-panel-interactive:hover {
+  border-color: rgba(216, 255, 67, 0.24);
+}
+
+.buildo-presets-page .glass-panel-interactive:hover {
+  transform: translateY(-5px);
+  border-color: rgba(216, 255, 67, 0.42);
+  box-shadow: 0 22px 62px rgba(0, 0, 0, 0.28);
+}
+
+.buildo-presets-page .glass-panel-interactive img {
+  transition: transform 700ms cubic-bezier(0.2, 0.75, 0.25, 1), filter 700ms ease;
+}
+
+.buildo-presets-page .glass-panel-interactive:hover img {
+  transform: scale(1.04);
+  filter: saturate(1.08);
+}
+
+.buildo-checkout-page input,
+.buildo-checkout-page textarea,
+.buildo-presets-page input,
+.buildo-orders-page input,
+.buildo-cart-page input {
+  background-color: rgba(7, 8, 6, 0.68);
+  border-color: rgba(255, 255, 255, 0.12);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.buildo-checkout-page input:focus,
+.buildo-checkout-page textarea:focus,
+.buildo-presets-page input:focus,
+.buildo-orders-page input:focus,
+.buildo-cart-page input:focus {
+  background-color: rgba(7, 8, 6, 0.9);
+}
+
+.buildo-payment-overlay {
+  animation: buildo-payment-backdrop-in 180ms ease-out both;
+}
+
+.buildo-payment-modal {
+  color: #f5f6ef;
+  background: #151711;
+  border-color: rgba(255, 255, 255, 0.14);
+  animation: buildo-payment-card-in 300ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.buildo-payment-modal [class*="text-cyan-"] { color: #d8ff43 !important; }
+.buildo-payment-modal [class*="bg-cyan-"] { background-color: rgba(216, 255, 67, 0.1) !important; }
+.buildo-payment-modal [class*="border-cyan-"] { border-color: rgba(216, 255, 67, 0.27) !important; }
+.buildo-payment-modal [class*="from-cyan-"] { --tw-gradient-from: #d8ff43 var(--tw-gradient-from-position) !important; }
+.buildo-payment-modal [class*="to-blue-"] { --tw-gradient-to: #c7ed39 var(--tw-gradient-to-position) !important; }
+.buildo-payment-modal button[class*="from-cyan-"] { color: #171910 !important; }
+.buildo-payment-modal [class*="bg-dark-900"] { background-color: #151711 !important; }
+.buildo-payment-modal [class*="bg-dark-950"] { background-color: #0c0d0a !important; }
+
+@keyframes buildo-payment-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes buildo-payment-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.buildo-footer {
+  margin-top: auto;
+}
+
+@media (max-width: 640px) {
+  .buildo-shop-page {
+    padding-top: 1.5rem;
+  }
+
+  .buildo-shop-page > :first-child h1 {
+    font-size: clamp(2rem, 9vw, 2.75rem);
+    line-height: 0.98;
+  }
+
+  .buildo-presets-page .glass-panel-interactive,
+  .buildo-cart-page .glass-panel,
+  .buildo-orders-page .glass-panel {
+    border-radius: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buildo-mobile-nav,
+  .buildo-shop-page,
+  .buildo-payment-overlay,
+  .buildo-payment-modal {
+    animation: none !important;
+  }
+
+  .buildo-shop-page *,
+  .buildo-payment-modal * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .buildo-presets-page .glass-panel-interactive:hover,
+  .buildo-presets-page .glass-panel-interactive:hover img {
+    transform: none;
+  }
+}
+
+/* Bring the customer routes in line with the lime-on-charcoal Make screens. */
+.buildo-app-shell {
+  background:
+    radial-gradient(ellipse at 78% 4%, rgba(216, 255, 67, 0.055), transparent 35rem),
+    #10110d;
+}
+
+.buildo-app-shell [class*="text-cyan-"],
+.buildo-app-shell [class*="text-blue-"] {
+  color: #d8ff43 !important;
+}
+
+.buildo-app-shell [class*="border-cyan-"],
+.buildo-app-shell [class*="border-blue-"] {
+  border-color: rgba(216, 255, 67, 0.3) !important;
+}
+
+.buildo-app-shell [class*="bg-cyan-500/"],
+.buildo-app-shell [class*="bg-blue-500/"] {
+  background-color: rgba(216, 255, 67, 0.1) !important;
+}
+
+.buildo-app-shell [class*="bg-cyan-950"],
+.buildo-app-shell [class*="bg-blue-950"] {
+  background-color: rgba(216, 255, 67, 0.08) !important;
+}
+
+.buildo-app-shell [class~="bg-cyan-500"],
+.buildo-app-shell [class~="bg-blue-600"] {
+  background-color: #d8ff43 !important;
+  color: #171910 !important;
+}
+
+.buildo-app-shell [class~="from-cyan-500"] {
+  --tw-gradient-from: #d8ff43 var(--tw-gradient-from-position) !important;
+}
+
+.buildo-app-shell [class~="to-blue-600"] {
+  --tw-gradient-to: #c7ed39 var(--tw-gradient-to-position) !important;
+}
+
+.buildo-app-shell [class*="from-cyan-950/"],
+.buildo-app-shell [class*="from-blue-950/"] {
+  --tw-gradient-from: rgba(216, 255, 67, 0.06) var(--tw-gradient-from-position) !important;
+}
+
+.buildo-app-shell [class*="from-cyan-500/"],
+.buildo-app-shell [class*="to-blue-600/"] {
+  --tw-gradient-from: rgba(216, 255, 67, 0.12) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(199, 237, 57, 0.12) var(--tw-gradient-to-position) !important;
+}
+
+.buildo-app-shell [class*="from-blue-600/"],
+.buildo-app-shell [class*="to-cyan-600/"] {
+  --tw-gradient-from: rgba(216, 255, 67, 0.1) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(199, 237, 57, 0.1) var(--tw-gradient-to-position) !important;
+}
+
+.buildo-app-shell [class~="hover:from-cyan-400"]:hover {
+  --tw-gradient-from: #d8ff43 var(--tw-gradient-from-position) !important;
+}
+
+.buildo-app-shell [class~="hover:to-blue-500"]:hover {
+  --tw-gradient-to: #c7ed39 var(--tw-gradient-to-position) !important;
+}
+
+.buildo-app-shell [class*="hover:from-blue-600/"]:hover,
+.buildo-app-shell [class*="hover:to-cyan-600/"]:hover {
+  --tw-gradient-from: rgba(216, 255, 67, 0.18) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(199, 237, 57, 0.18) var(--tw-gradient-to-position) !important;
+}
+
+.buildo-app-shell [class*="shadow-cyan-"] {
+  --tw-shadow-color: rgba(216, 255, 67, 0.18) !important;
+}
+
+.buildo-app-shell [class~="hover:bg-cyan-400"]:hover,
+.buildo-app-shell [class~="hover:bg-blue-500"]:hover {
+  background-color: #c7ed39 !important;
+  color: #171910 !important;
+}
+
+.buildo-app-shell [class~="hover:text-cyan-300"]:hover,
+.buildo-app-shell [class~="hover:text-cyan-400"]:hover,
+.buildo-app-shell [class~="hover:text-blue-400"]:hover {
+  color: #e7ff8a !important;
+}
+
+.buildo-presets-page,
+.buildo-orders-page,
+.buildo-cart-page,
+.buildo-checkout-page,
+.buildo-builder-page {
+  padding-top: clamp(2.5rem, 6vw, 5.25rem);
+  padding-bottom: clamp(3.5rem, 7vw, 6rem);
+}
+
+.buildo-presets-page > :first-child h1,
+.buildo-orders-page > :first-child h1 {
+  max-width: 16ch;
+  font-size: clamp(2.45rem, 5vw, 4.25rem);
+  line-height: 0.98;
+}
+
+.buildo-presets-page > :first-child p,
+.buildo-orders-page > :first-child p {
+  max-width: 58ch;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.buildo-presets-page .glass-panel-interactive {
+  background: linear-gradient(155deg, rgba(25, 27, 20, 0.96), rgba(16, 17, 13, 0.98));
+}
+
+.buildo-presets-page .preset-assurance-card {
+  transition: transform 240ms ease, border-color 240ms ease, background-color 240ms ease;
+}
+
+.buildo-presets-page .preset-assurance-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(216, 255, 67, 0.3);
+  background-color: rgba(216, 255, 67, 0.045);
+}
+
+.buildo-orders-page > :first-child {
+  align-items: end;
+}
+
+.buildo-orders-page #order-lookup {
+  min-height: 2.9rem;
+  border-radius: 999px;
+  padding-inline: 1.15rem;
+}
+
+.buildo-orders-page form button {
+  min-height: 2.9rem;
+  border-radius: 999px;
+  padding-inline: 1.25rem;
+}
+
+.buildo-orders-page .glass-panel,
+.buildo-cart-page .glass-panel,
+.buildo-checkout-page .glass-panel {
+  backdrop-filter: blur(18px);
+}
+
+@media (max-width: 640px) {
+  .buildo-presets-page > :first-child h1,
+  .buildo-orders-page > :first-child h1 {
+    max-width: 13ch;
+    font-size: clamp(2.35rem, 11vw, 3.25rem);
+  }
+
+  .buildo-orders-page > :first-child {
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buildo-presets-page .preset-assurance-card:hover {
+    transform: none;
+  }
+}
