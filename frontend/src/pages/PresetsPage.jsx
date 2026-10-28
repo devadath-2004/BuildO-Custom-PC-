@@ -61,6 +61,15 @@ const CATEGORY_LABELS = {
   OFFICE: 'OFFICE & WORK',
 };
 
+const PRESET_FALLBACK_IMAGES = {
+  GAMING: '/pc-setup.jpg',
+  STUDIO: '/setup-bg.jpg',
+  VIDEO_EDITING: '/desk-setup.jpg',
+  OFFICE: '/desk-setup.jpg',
+};
+
+const getPresetFallbackImage = (preset) => PRESET_FALLBACK_IMAGES[preset?.category] || '/pc-setup.jpg';
+
 const getPresetPresentation = preset => ({
   ...preset,
   ...(FIGMA_PRESET_PRESENTATION[preset.name] || {}),
@@ -117,7 +126,7 @@ export default function PresetsPage() {
   };
 
   return (
-    <div className="buildo-shop-page buildo-presets-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="buildo-shop-page buildo-presets-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div>
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-mono font-semibold mb-2 border border-blue-500/20">
@@ -183,20 +192,28 @@ export default function PresetsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {filteredPresets.map(preset => {
+          {filteredPresets.map((preset, index) => {
             const isExpanded = expandedPresetId === preset.id;
             const presentation = getPresetPresentation(preset);
+            const fallbackImage = getPresetFallbackImage(preset);
 
             return (
               <div
                 key={preset.id}
-                className="glass-panel-interactive rounded-2xl overflow-hidden flex flex-col justify-between"
+                className="buildo-preset-card glass-panel-interactive rounded-2xl overflow-hidden flex flex-col justify-between"
+                style={{ '--buildo-stagger': `${Math.min(index, 7) * 65}ms` }}
               >
                 {/* Image & Header */}
                 <div className="relative h-56 overflow-hidden bg-dark-950">
                   <img
-                    src={preset.imageUrl}
+                    src={preset.imageUrl || fallbackImage}
                     alt={preset.name}
+                    onError={(event) => {
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = fallbackImage;
+                    }}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent" />
@@ -235,38 +252,44 @@ export default function PresetsPage() {
                       {['CPU', 'GPU', 'RAM', 'STORAGE'].map(catKey => {
                         const comp = preset.components?.find(c => c.category === catKey);
                         return (
-                          <div 
+                          <button
+                            type="button"
                             key={catKey}
                             onClick={() => comp && setInspectComponent(comp)}
-                            className="bg-dark-900/80 p-2 rounded-lg border border-slate-800/80 hover:border-slate-700 cursor-pointer transition-colors group"
+                            disabled={!comp}
+                            className="preset-component-tile bg-dark-900/80 p-2 rounded-lg border border-slate-800/80 hover:border-slate-700 cursor-pointer transition-colors group text-left disabled:cursor-default"
                           >
+                            <ProductImage component={comp} className="w-full h-16 mb-2" rounded="rounded-md" />
                             <span className="text-slate-500 text-[10px] block">{catKey}:</span>
                             <span className="truncate block font-semibold text-white group-hover:text-cyan-400">
                               {comp?.name || 'N/A'}
                             </span>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
 
                     {/* Expandable full list with component details */}
                     {isExpanded && (
-                      <div className="pt-3 mt-3 border-t border-slate-800 space-y-2 text-xs text-slate-300 font-mono">
+                      <div className="buildo-expand-enter pt-3 mt-3 border-t border-slate-800 space-y-2 text-xs text-slate-300 font-mono">
                         <div className="text-[10px] uppercase text-cyan-400 font-bold">Remaining Assembly:</div>
                         <div className="grid grid-cols-2 gap-2">
                           {['MOTHERBOARD', 'PSU', 'CABINET', 'COOLING'].map(catKey => {
                             const comp = preset.components?.find(c => c.category === catKey);
                             return (
-                              <div 
+                              <button
+                                type="button"
                                 key={catKey}
                                 onClick={() => comp && setInspectComponent(comp)}
-                                className="bg-dark-900/80 p-2 rounded-lg border border-slate-800/80 hover:border-slate-700 cursor-pointer transition-colors group"
+                                disabled={!comp}
+                                className="preset-component-tile bg-dark-900/80 p-2 rounded-lg border border-slate-800/80 hover:border-slate-700 cursor-pointer transition-colors group text-left disabled:cursor-default"
                               >
+                                <ProductImage component={comp} className="w-full h-14 mb-2" rounded="rounded-md" />
                                 <span className="text-slate-500 text-[10px] block">{catKey}:</span>
                                 <span className="truncate block font-semibold text-white group-hover:text-cyan-400">
                                   {comp?.name || 'N/A'}
                                 </span>
-                              </div>
+                              </button>
                             );
                           })}
                         </div>

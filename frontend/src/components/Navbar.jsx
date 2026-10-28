@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Cpu, LogOut, Home, Wrench, Shield, Layers, Package, ShoppingCart, Menu, X, ArrowRight } from 'lucide-react';
+import { LogOut, Home, Wrench, Shield, Layers, Package, ShoppingCart, Menu, X, ArrowRight } from 'lucide-react';
+import BuildOWordmark from './BuildOWordmark';
 
 export default function Navbar() {
   const { activePage, setActivePage, user, logout, cart } = useApp();
@@ -42,14 +43,11 @@ export default function Navbar() {
       <div className="mx-auto flex min-h-[72px] max-w-[1320px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
         <button
           type="button"
-          className="inline-flex shrink-0 items-center gap-3 text-left"
+          className="inline-flex shrink-0 items-center text-left"
           onClick={() => navigate('home')}
           aria-label="BuildO home"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d8ff43] text-[#171910] transition-transform hover:rotate-[-5deg] hover:scale-105">
-            <Cpu className="h-5 w-5" />
-          </span>
-          <span className="text-lg font-semibold tracking-[-0.04em]">BuildO<span className="text-[#d8ff43]">.</span></span>
+          <BuildOWordmark size="nav" />
         </button>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 xl:flex">

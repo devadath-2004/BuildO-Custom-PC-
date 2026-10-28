@@ -109,8 +109,8 @@ export default function ComponentSelectorModal({ category, currentSelected, curr
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-        <div className="bg-dark-900 border border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="buildo-component-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="buildo-component-modal bg-dark-900 border border-slate-700/80 rounded-2xl w-full max-w-4xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
           {/* Modal Header */}
           <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-dark-850/90">
             <div>
@@ -265,20 +265,23 @@ export default function ComponentSelectorModal({ category, currentSelected, curr
                 </button>
               </div>
             ) : (
-              filtered.map(comp => {
+              filtered.map((comp, index) => {
                 const isSelected = currentSelected?.id === comp.id;
                 const hint = getCompatibilityHint(comp);
 
                 return (
                   <div
                     key={comp.id}
-                    className={`p-3.5 sm:p-4 rounded-xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group ${
+                    className={`buildo-component-option p-3.5 sm:p-4 rounded-xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group ${
+                      isSelected ? 'is-selected' : ''
+                    } ${
                       isSelected
                         ? 'bg-cyan-950/30 border-cyan-500/50 shadow-md shadow-cyan-950/40'
                         : hint?.ok === false
                         ? 'bg-dark-950/60 border-slate-800/80 hover:border-rose-900/60'
                         : 'bg-dark-950/80 border-slate-800 hover:border-slate-700 hover:bg-dark-850'
                     }`}
+                    style={{ '--buildo-stagger': `${Math.min(index, 9) * 35}ms` }}
                   >
                     <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                       {/* Exact Product Photo Component with hover zoom & inspect trigger */}

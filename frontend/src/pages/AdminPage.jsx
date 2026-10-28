@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
 import InvoiceView from '../components/InvoiceView';
+import BuildOWordmark from '../components/BuildOWordmark';
 import { 
   Shield, Package, DollarSign, Layers, Cpu, Check, 
   Trash2, Plus, Edit3, RefreshCw, Truck, FileText, AlertCircle,
@@ -363,13 +364,14 @@ export default function AdminPage() {
 
   return (
     <div className="buildo-admin-shell">
-      <div className="buildo-admin max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="buildo-admin max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-mono font-semibold mb-2 border border-purple-500/20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d8ff43]/10 text-[#d8ff43] text-xs font-mono font-semibold mb-2 border border-[#d8ff43]/20">
             <Shield className="w-3.5 h-3.5" />
-            BuildO Admin Workspace
+            <BuildOWordmark size="label" />
+            <span>Admin Workspace</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Operations dashboard

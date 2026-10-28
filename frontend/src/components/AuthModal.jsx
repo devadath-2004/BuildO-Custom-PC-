@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
+import BuildOWordmark from './BuildOWordmark';
 import { X, Lock, Mail, User as UserIcon, Shield, ArrowRight } from 'lucide-react';
 
 export default function AuthModal({ onClose }) {
@@ -65,8 +66,9 @@ export default function AuthModal({ onClose }) {
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-dark-850">
           <div>
-            <span className="text-xs uppercase font-mono font-semibold tracking-wider text-cyan-400">
-              BuildO Identity
+            <span className="inline-flex items-center gap-2 text-xs uppercase font-mono font-semibold tracking-wider text-cyan-400">
+              <BuildOWordmark size="label" />
+              Identity
             </span>
             <h3 className="text-lg font-bold text-white">
               {isLogin ? 'Sign In to Your Account' : 'Create a New Account'}

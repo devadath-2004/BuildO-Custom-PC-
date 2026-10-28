@@ -1,6 +1,7 @@
 import React from 'react';
-import { Cpu, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import BuildOWordmark from './BuildOWordmark';
 
 export default function Footer() {
   const { user, setActivePage } = useApp();
@@ -8,9 +9,8 @@ export default function Footer() {
   return (
     <footer className="buildo-footer mt-16 border-t border-white/10 bg-[#10110d] text-white">
       <div className="mx-auto flex max-w-[1320px] flex-col gap-7 px-5 py-8 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-12">
-        <button type="button" onClick={() => setActivePage('home')} className="inline-flex items-center gap-3 self-start text-left">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#d8ff43] text-[#171910]"><Cpu className="h-4 w-4" /></span>
-          <span className="text-sm font-semibold tracking-tight">BuildO<span className="text-[#d8ff43]">.</span></span>
+        <button type="button" onClick={() => setActivePage('home')} className="inline-flex items-center self-start text-left">
+          <BuildOWordmark size="footer" />
         </button>
 
         <p className="max-w-sm text-xs leading-5 text-white/45">PC recommendations for people who care about the experience, not the spec-sheet headache.</p>

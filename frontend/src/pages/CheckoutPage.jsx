@@ -124,7 +124,7 @@ export default function CheckoutPage() {
   // If order completed, show success screen with digital invoice viewer
   if (completedOrder) {
     return (
-      <div className="buildo-shop-page buildo-checkout-page max-w-4xl mx-auto px-4 py-12 space-y-8 animate-in fade-in duration-300">
+      <div className="buildo-shop-page buildo-checkout-page max-w-4xl mx-auto px-4 py-8 space-y-6 animate-in fade-in duration-300">
         <div className="p-8 rounded-3xl bg-dark-900 border border-emerald-500/40 shadow-2xl text-center space-y-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="buildo-shop-page buildo-checkout-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="buildo-shop-page buildo-checkout-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div>
         <button
           onClick={() => setActivePage('cart')}

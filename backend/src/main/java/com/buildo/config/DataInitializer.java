@@ -42,21 +42,20 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Idempotent initialization: only seed if database is empty
-        if (componentRepository.count() > 0 && userRepository.count() > 0) {
-            return;
-        }
+        // Seed demo accounts only when missing so later catalog updates stay idempotent.
+        User admin = userRepository.findByUsername("admin").orElseGet(() -> {
+            User seededAdmin = new User("admin", "admin@buildo.pc", passwordEncoder.encode("admin123"), "BuildO System Admin", Role.ROLE_ADMIN);
+            seededAdmin.setPhone("+91 9876543210");
+            seededAdmin.setAddress("Tech Park Tower 4, Bangalore, India");
+            return userRepository.save(seededAdmin);
+        });
 
-        // 1. Seed Users
-        User admin = new User("admin", "admin@buildo.pc", passwordEncoder.encode("admin123"), "BuildO System Admin", Role.ROLE_ADMIN);
-        admin.setPhone("+91 9876543210");
-        admin.setAddress("Tech Park Tower 4, Bangalore, India");
-        userRepository.save(admin);
-
-        User customer = new User("customer", "alex@example.com", passwordEncoder.encode("customer123"), "Alex Morgan", Role.ROLE_CUSTOMER);
-        customer.setPhone("+91 9811223344");
-        customer.setAddress("42 Silicon Enclave, Indiranagar, Bangalore");
-        userRepository.save(customer);
+        User customer = userRepository.findByUsername("customer").orElseGet(() -> {
+            User seededCustomer = new User("customer", "alex@example.com", passwordEncoder.encode("customer123"), "Alex Morgan", Role.ROLE_CUSTOMER);
+            seededCustomer.setPhone("+91 9811223344");
+            seededCustomer.setAddress("42 Silicon Enclave, Indiranagar, Bangalore");
+            return userRepository.save(seededCustomer);
+        });
 
         List<com.buildo.model.Component> comps = new ArrayList<>();
 
@@ -479,7 +478,7 @@ public class DataInitializer implements CommandLineRunner {
         pBudgetGaming.setDiscountPercent(5);
         pBudgetGaming.setImageUrl("https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=600&q=85");
         pBudgetGaming.setComponents(Arrays.asList(cpuRyzen5500, mbGigabyteA520M, ramCorsair16GbDdr4, ssdKingston500Gb, gpuRx6600, psuAnt500W, cabAntIce100, coolAg300));
-        presetRepository.save(pBudgetGaming);
+        savePresetIfMissing(pBudgetGaming);
 
         // Preset 2: Value 1440p High-FPS Gamer (Mid-Range ~₹89,999)
         Preset pMidGaming = new Preset();
@@ -491,7 +490,7 @@ public class DataInitializer implements CommandLineRunner {
         pMidGaming.setDiscountPercent(6);
         pMidGaming.setImageUrl("https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&q=85");
         pMidGaming.setComponents(Arrays.asList(cpuRyzen7600X, mbAsrockB650M, ramCorsair32GbDdr5, ssdCrucial1Tb, gpuRtx4060Ti, psuCoolermaster650W, cabDeepcoolCc560, coolAg400));
-        presetRepository.save(pMidGaming);
+        savePresetIfMissing(pMidGaming);
 
         // Preset 3: Apex Dominator 4K Gaming (Flagship ~₹2,39,999)
         Preset pApexGaming = new Preset();
@@ -503,7 +502,7 @@ public class DataInitializer implements CommandLineRunner {
         pApexGaming.setDiscountPercent(5);
         pApexGaming.setImageUrl("https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=85");
         pApexGaming.setComponents(Arrays.asList(cpuRyzen7800X3D, mbMsiB650Tomahawk, ramGskill32GbDdr5, ssdWdBlack1Tb, gpuRtx4080Super, psuCorsair850W, cabLianLiO11, coolKraken360));
-        presetRepository.save(pApexGaming);
+        savePresetIfMissing(pApexGaming);
 
         // Preset 4: Budget Student & Home Office (Entry Office ~₹29,999)
         Preset pBudgetOffice = new Preset();
@@ -515,7 +514,7 @@ public class DataInitializer implements CommandLineRunner {
         pBudgetOffice.setDiscountPercent(5);
         pBudgetOffice.setImageUrl("https://images.unsplash.com/photo-1547082299-de196ea013d6?w=600&q=85");
         pBudgetOffice.setComponents(Arrays.asList(cpuI3_14100F, mbMsiH610M, ramCrucial8GbDdr4, ssdKingston500Gb, gpuRtx3050, psuAnt500W, cabQm300L, coolStock));
-        presetRepository.save(pBudgetOffice);
+        savePresetIfMissing(pBudgetOffice);
 
         // Preset 5: SwiftPro Productivity & Coding (Mid-Range Office ~₹64,999)
         Preset pMidOffice = new Preset();
@@ -527,7 +526,7 @@ public class DataInitializer implements CommandLineRunner {
         pMidOffice.setDiscountPercent(8);
         pMidOffice.setImageUrl("https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=600&q=85");
         pMidOffice.setComponents(Arrays.asList(cpuI5_14400F, mbAsusB760M, ramCorsair32GbDdr5, ssdWdBlue1Tb, gpuRtx4060, psuDeepcool550W, cabQm300L, coolAg400));
-        presetRepository.save(pMidOffice);
+        savePresetIfMissing(pMidOffice);
 
         // Preset 6: Creator Studio Pro 3D/CAD (~₹2,84,999)
         Preset pStudio = new Preset();
@@ -539,7 +538,7 @@ public class DataInitializer implements CommandLineRunner {
         pStudio.setDiscountPercent(7);
         pStudio.setImageUrl("https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=600&q=85");
         pStudio.setComponents(Arrays.asList(cpuI9_14900K, mbMsiZ790Tomahawk, ramCorsair64GbDdr5, ssdSamsung2Tb, gpuRtx4070TiSuper, psuCorsair1000W, cabNzxtH9, coolArctic360));
-        presetRepository.save(pStudio);
+        savePresetIfMissing(pStudio);
 
         // Preset 7: DaVinci CineRender 8K (~₹2,69,999)
         Preset pVideo = new Preset();
@@ -551,9 +550,81 @@ public class DataInitializer implements CommandLineRunner {
         pVideo.setDiscountPercent(5);
         pVideo.setImageUrl("https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&q=85");
         pVideo.setComponents(Arrays.asList(cpuRyzen7950X, mbMsiB650Tomahawk, ramGskill64GbDdr5, ssdSamsung2Tb, gpuRtx4080Super, psuCorsair1000W, cabLianLiO11, coolKraken360));
-        presetRepository.save(pVideo);
+        savePresetIfMissing(pVideo);
 
-        // Sample initial paid order
+        // Additional ready-to-customize builds assembled only from the existing catalog.
+        List<com.buildo.model.Component> compactCreatorParts = Arrays.asList(
+                cpuI5_12400F, mbMsiH610M, ramCorsair16GbDdr4, ssdKingston500Gb,
+                gpuRtx3050, psuAnt500W, cabQm300L, coolStock);
+        Preset pCompactCreator = new Preset();
+        pCompactCreator.setName("Compact 1080p Creator");
+        pCompactCreator.setCategory(PresetCategory.STUDIO);
+        pCompactCreator.setDescription("A compact, accessible starting point for everyday creative work, online classes, and entry-level 1080p gaming.");
+        pCompactCreator.setTargetResolutionOrUse("Compact mATX · 1080p esports · Everyday creation");
+        pCompactCreator.setBasePrice(totalPrice(compactCreatorParts));
+        pCompactCreator.setDiscountPercent(4);
+        pCompactCreator.setImageUrl("/pc-setup.jpg");
+        pCompactCreator.setComponents(compactCreatorParts);
+        savePresetIfMissing(pCompactCreator);
+
+        List<com.buildo.model.Component> streamingParts = Arrays.asList(
+                cpuRyzen5600X, mbMsiB550M, ramGskill32GbDdr4, ssdWdBlue1Tb,
+                gpuRx7700XT, psuCorsair750W, cabDeepcoolCc560, coolPeerless);
+        Preset pStreaming = new Preset();
+        pStreaming.setName("Streaming Ready 1440p");
+        pStreaming.setCategory(PresetCategory.GAMING);
+        pStreaming.setDescription("A balanced gaming and streaming build with 32GB of memory, fast NVMe storage, and room for a dual-monitor setup.");
+        pStreaming.setTargetResolutionOrUse("1440p gaming · Streaming · 32GB memory");
+        pStreaming.setBasePrice(totalPrice(streamingParts));
+        pStreaming.setDiscountPercent(5);
+        pStreaming.setImageUrl("/setup-bg.jpg");
+        pStreaming.setComponents(streamingParts);
+        savePresetIfMissing(pStreaming);
+
+        List<com.buildo.model.Component> quietGamingParts = Arrays.asList(
+                cpuRyzen9700X, mbGigabyteB650, ramCorsair32GbDdr5, ssdWdBlue1Tb,
+                gpuRtx4070Super, psuCorsair850W, cabCorsair4000D, coolArctic360);
+        Preset pQuietGaming = new Preset();
+        pQuietGaming.setName("Quiet 1440p Gaming Build");
+        pQuietGaming.setCategory(PresetCategory.GAMING);
+        pQuietGaming.setDescription("A modern AM5 gaming system with a high-airflow case, generous cooling, and a strong 1440p graphics card.");
+        pQuietGaming.setTargetResolutionOrUse("1440p high refresh · AM5 upgrade path · High-airflow case");
+        pQuietGaming.setBasePrice(totalPrice(quietGamingParts));
+        pQuietGaming.setDiscountPercent(5);
+        pQuietGaming.setImageUrl("/pc-setup.jpg");
+        pQuietGaming.setComponents(quietGamingParts);
+        savePresetIfMissing(pQuietGaming);
+
+        List<com.buildo.model.Component> rayTracingParts = Arrays.asList(
+                cpuRyzen7800X3D, mbMsiB650Tomahawk, ramGskill32GbDdr5, ssdWdBlack1Tb,
+                gpuRtx4080Super, psuCorsair1000W, cabLianLiO11, coolKraken360);
+        Preset pRayTracing = new Preset();
+        pRayTracing.setName("4K Ray Tracing Max");
+        pRayTracing.setCategory(PresetCategory.GAMING);
+        pRayTracing.setDescription("A flagship 4K gaming configuration for high visual settings, ray tracing, and demanding modern games.");
+        pRayTracing.setTargetResolutionOrUse("4K gaming · Ray tracing · Premium cooling");
+        pRayTracing.setBasePrice(totalPrice(rayTracingParts));
+        pRayTracing.setDiscountPercent(4);
+        pRayTracing.setImageUrl("/setup-bg.jpg");
+        pRayTracing.setComponents(rayTracingParts);
+        savePresetIfMissing(pRayTracing);
+
+        List<com.buildo.model.Component> workstationParts = Arrays.asList(
+                cpuRyzen7950X, mbGigabyteX670E, ramCorsair64GbDdr5, ssdSamsung2Tb,
+                gpuRtx4090, psuCorsair1000W, cabNzxtH9, coolArctic360);
+        Preset pWorkstation = new Preset();
+        pWorkstation.setName("AI & 3D Workstation");
+        pWorkstation.setCategory(PresetCategory.STUDIO);
+        pWorkstation.setDescription("A high-memory workstation configuration for GPU rendering, local AI experiments, simulation, and large creative projects.");
+        pWorkstation.setTargetResolutionOrUse("GPU rendering · Local AI · 3D and simulation");
+        pWorkstation.setBasePrice(totalPrice(workstationParts));
+        pWorkstation.setDiscountPercent(3);
+        pWorkstation.setImageUrl("/desk-setup.jpg");
+        pWorkstation.setComponents(workstationParts);
+        savePresetIfMissing(pWorkstation);
+
+        // Add the demo order once; do not recreate it when catalog seeds are refreshed.
+        if (orderRepository.findByOrderNumber("BO-20268821").isEmpty()) {
         Order sampleOrder = new Order();
         sampleOrder.setOrderNumber("BO-20268821");
         sampleOrder.setUser(customer);
@@ -586,6 +657,7 @@ public class DataInitializer implements CommandLineRunner {
         sampleInvoice.setTransactionId("TXN-UPI9921473");
         sampleInvoice.setPaymentMethod(PaymentMethod.UPI);
         invoiceRepository.save(sampleInvoice);
+        }
     }
 
     private com.buildo.model.Component createComp(String name, Category cat, String brand, String model,
@@ -594,6 +666,13 @@ public class DataInitializer implements CommandLineRunner {
                                                   String memType, Integer memSlots, Integer memSpeed,
                                                   Integer wattage, Integer tdp, String rating,
                                                   Integer len, Integer height, Integer radSize, String coolType) {
+        if (model != null && !model.isBlank()) {
+            com.buildo.model.Component existing = componentRepository.findFirstByModel(model).orElse(null);
+            if (existing != null) {
+                return existing;
+            }
+        }
+
         com.buildo.model.Component c = new com.buildo.model.Component();
         c.setName(name);
         c.setCategory(cat);
@@ -617,5 +696,19 @@ public class DataInitializer implements CommandLineRunner {
         c.setCoolerType(coolType);
         c.setInStock(true);
         return c;
+    }
+
+    private void savePresetIfMissing(Preset preset) {
+        boolean alreadySeeded = presetRepository.findByNameContainingIgnoreCase(preset.getName()).stream()
+                .anyMatch(existing -> existing.getName().equalsIgnoreCase(preset.getName()));
+        if (!alreadySeeded) {
+            presetRepository.save(preset);
+        }
+    }
+
+    private BigDecimal totalPrice(List<com.buildo.model.Component> components) {
+        return components.stream()
+                .map(component -> component.getPrice() == null ? BigDecimal.ZERO : component.getPrice())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

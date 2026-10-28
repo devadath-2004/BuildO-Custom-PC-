@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
 import { Download, Printer, X, CheckCircle2, ShieldCheck, FileText } from 'lucide-react';
+import BuildOWordmark from './BuildOWordmark';
 
 export default function InvoiceView({ order, invoice, onClose }) {
   const { showNotification } = useApp();
@@ -65,9 +66,7 @@ export default function InvoiceView({ order, invoice, onClose }) {
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-800">
             <div>
-              <div className="text-2xl font-extrabold text-white font-mono tracking-tight">
-                Build<span className="text-cyan-400">O</span>
-              </div>
+              <BuildOWordmark size="invoice" />
               <p className="text-xs text-slate-400 mt-1">Custom PC Configurator & High Performance Workstations</p>
               <p className="text-[11px] text-slate-500 font-mono">GSTIN: 27AABCB1234F1Z9 | CIN: U72200KA2026PTC109281</p>
               <p className="text-[11px] text-slate-500">support@buildo.pc • www.buildo.pc</p>

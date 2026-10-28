@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BadgeCheck,
   Check,
-  Cpu,
   Gamepad2,
   Layers,
   LogOut,
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { apiClient } from '../api/client';
+import BuildOWordmark from '../components/BuildOWordmark';
 
 const PROCESS_STEPS = [
   {
@@ -45,6 +45,9 @@ const BUILD_PATHS = [
     title: 'Build from the ground up.',
     description: 'Pick every component yourself while BuildO checks sockets, dimensions, power, and cooling in real time.',
     icon: Wrench,
+    image: '/pc-setup.jpg',
+    imageLabel: 'Customize a PC component by component',
+    imageCaption: 'Every part, your call',
     cta: 'Open custom builder',
     onChoose: ({ setActivePage }) => setActivePage('configurator'),
     features: ['Socket and power checks', 'Live price updates', 'Swap parts whenever you like'],
@@ -55,6 +58,9 @@ const BUILD_PATHS = [
     title: 'Answer a few. Get your build.',
     description: 'Share your games, workload, and budget. We’ll produce a tuned starting point you can still customize.',
     icon: Sparkles,
+    image: '/setup-bg.jpg',
+    imageLabel: 'A balanced gaming PC ready to customize',
+    imageCaption: 'A balanced build to start from',
     cta: 'Get my recommendation',
     onChoose: ({ setActivePage }) => setActivePage('presets'),
     features: ['Curated preset builds', 'See the included components', 'Customize in the builder'],
@@ -69,8 +75,12 @@ const formatPrice = (price) => {
 };
 
 function PresetCard({ preset, index, onLoad }) {
-  const fallbackImage = index === 0 ? '/pc-setup.jpg' : '/setup-bg.jpg';
-  const image = fallbackImage;
+  const fallbackImage = preset.category === 'OFFICE'
+    ? '/desk-setup.jpg'
+    : preset.category === 'STUDIO' || preset.category === 'VIDEO_EDITING'
+      ? '/setup-bg.jpg'
+      : index === 0 ? '/pc-setup.jpg' : '/setup-bg.jpg';
+  const image = preset.imageUrl || fallbackImage;
   const cpu = preset.components?.find((component) => component.category === 'CPU')?.name;
   const gpu = preset.components?.find((component) => component.category === 'GPU')?.name;
 
@@ -84,6 +94,8 @@ function PresetCard({ preset, index, onLoad }) {
             event.currentTarget.onerror = null;
             event.currentTarget.src = fallbackImage;
           }}
+          loading="lazy"
+          decoding="async"
           className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/10" />
@@ -138,6 +150,7 @@ function PresetCard({ preset, index, onLoad }) {
 export default function HomePage() {
   const { user, cart, logout, setActivePage, loadPresetIntoConfigurator } = useApp();
   const [presets, setPresets] = useState([]);
+  const [componentCount, setComponentCount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [presetError, setPresetError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -153,6 +166,21 @@ export default function HomePage() {
       })
       .finally(() => {
         if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.getComponents()
+      .then((data) => {
+        if (active) setComponentCount(Array.isArray(data) ? data.length : null);
+      })
+      .catch(() => {
+        if (active) setComponentCount(null);
       });
 
     return () => {
@@ -217,13 +245,10 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => scrollTo('top')}
-            className="inline-flex items-center gap-3 text-left"
+            className="inline-flex items-center text-left"
             aria-label="BuildO home"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d8ff43] text-[#14160e]">
-              <Cpu className="h-5 w-5" />
-            </span>
-            <span className="text-lg font-semibold tracking-[-0.04em]">BuildO<span className="text-[#d8ff43]">.</span></span>
+            <BuildOWordmark size="nav" />
           </button>
 
           <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex">
@@ -367,8 +392,8 @@ export default function HomePage() {
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#10110d]/40 via-transparent to-black/10" />
               <div className="home-hero-catalog absolute left-5 top-5 rounded-2xl border border-white/15 bg-[#10110d]/80 p-4 backdrop-blur-md sm:left-7 sm:top-7">
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/55">Parts catalog</p>
-                <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-white">2,400<span className="text-[#d8ff43]">+</span></p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/55">Curated builds</p>
+                <p className="mt-1 text-2xl font-semibold tracking-[-0.05em] text-white">{loading ? '—' : presets.length}</p>
               </div>
               <div className="home-hero-confidence absolute bottom-5 right-5 w-[220px] rounded-2xl border border-white/10 bg-[#10110d]/90 p-5 text-white shadow-2xl backdrop-blur-md sm:bottom-7 sm:right-7 sm:w-[265px]">
                 <p className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.2em] text-white/55">
@@ -386,7 +411,7 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-[1320px] grid-cols-2 px-5 py-2 sm:px-8 md:grid-cols-4 lg:px-12">
             {[
               { value: '8', label: 'Part categories' },
-              { value: '70+', label: 'Trusted components' },
+              { value: componentCount === null ? '—' : componentCount.toLocaleString('en-IN'), label: 'Catalog components' },
               { value: '0', label: 'Compatibility surprises' },
               { value: 'Live', label: 'FPS estimates' },
             ].map((stat, index) => (
@@ -398,12 +423,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="how" className="home-section home-how scroll-mt-24 py-20 sm:py-28">
+        <section id="how" className="home-section home-how scroll-mt-24 py-12 sm:py-16">
           <div className="mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-12">
             <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
               <div className="home-reveal" data-home-reveal="left">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#d8ff43]">The smarter starting point</p>
-                <h2 className="mt-4 max-w-2xl text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">
+                <h2 className="max-w-2xl text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">
                   Less research.<br />Better decisions.
                 </h2>
               </div>
@@ -412,7 +436,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="mt-12 grid border-y border-white/10 sm:grid-cols-3">
+            <div className="mt-9 grid border-y border-white/10 sm:grid-cols-3">
               {PROCESS_STEPS.map((step, index) => {
                 const Icon = step.icon;
                 return (
@@ -421,7 +445,7 @@ export default function HomePage() {
                     <p className="text-xs font-bold tracking-[0.2em] text-white/40">/ {step.number}</p>
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/5 bg-white/[0.045] text-[#d8ff43]"><Icon className="h-5 w-5" /></span>
                   </div>
-                  <h3 className="mt-9 text-xl font-semibold tracking-[-0.04em] text-white sm:text-2xl">{step.title}</h3>
+                  <h3 className="mt-6 text-xl font-semibold tracking-[-0.04em] text-white sm:text-2xl">{step.title}</h3>
                   <p className="mt-3 max-w-sm text-sm leading-6 text-white/50">{step.description}</p>
                 </article>
                 );
@@ -430,28 +454,27 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="paths" className="home-section home-paths scroll-mt-24 py-20 sm:py-28">
+        <section id="paths" className="home-section home-paths scroll-mt-24 py-12 sm:py-16">
           <div className="mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-12">
             <div className="home-reveal max-w-2xl" data-home-reveal="left">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#d8ff43]">Choose your route</p>
-              <h2 className="mt-4 text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">Start where you’re comfortable.</h2>
+              <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">Start where you’re comfortable.</h2>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/55 sm:text-base">
                 Full control or a fast recommendation. Both routes end with a compatible, balanced PC.
               </p>
             </div>
 
-            <div className="mt-12 grid gap-5 lg:grid-cols-2">
+            <div className="mt-9 grid gap-5 lg:grid-cols-2">
               {BUILD_PATHS.map((path, index) => {
                 const Icon = path.icon;
                 return (
-                  <article key={path.number} className={`home-path-card home-reveal relative flex min-h-[440px] flex-col justify-between overflow-hidden rounded-[2rem] p-7 sm:p-10 ${index === 0 ? 'home-path-card-dark text-white' : 'home-path-card-lime text-[#171910]'}`} data-home-reveal={index === 0 ? 'left' : 'right'} style={{ '--home-reveal-delay': `${index * 100}ms` }}>
+                  <article key={path.number} className={`home-path-card home-reveal relative flex min-h-[460px] flex-col justify-between overflow-hidden rounded-[2rem] p-7 sm:p-10 ${index === 0 ? 'home-path-card-dark text-white' : 'home-path-card-lime text-[#171910]'}`} data-home-reveal={index === 0 ? 'left' : 'right'} style={{ '--home-reveal-delay': `${index * 100}ms` }}>
                     <div className={`pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full blur-3xl ${index === 0 ? 'bg-[#d8ff43]/[0.08]' : 'bg-black/[0.08]'}`} />
                     <div className="relative">
                       <div className="flex items-start justify-between">
                         <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${index === 0 ? 'bg-[#d8ff43] text-[#171910]' : 'bg-[#10110d] text-[#d8ff43]'}`}><Icon className="h-6 w-6" /></span>
                         <span className={`text-[10px] font-semibold tracking-[0.16em] ${index === 0 ? 'text-white/40' : 'text-[#171910]/45'}`}>PATH / {path.number}</span>
                       </div>
-                      <p className={`mt-12 text-[10px] font-bold uppercase tracking-[0.2em] ${index === 0 ? 'text-[#d8ff43]' : 'text-[#171910]/65'}`}>{path.eyebrow}</p>
+                      <p className={`mt-8 text-[10px] font-bold uppercase tracking-[0.2em] ${index === 0 ? 'text-[#d8ff43]' : 'text-[#171910]/65'}`}>{path.eyebrow}</p>
                       <h3 className="mt-4 max-w-md text-3xl font-semibold leading-[1.02] tracking-[-0.06em] sm:text-5xl">{path.title}</h3>
                       <p className={`mt-5 max-w-lg text-sm leading-7 ${index === 0 ? 'text-white/60' : 'text-[#171910]/65'}`}>{path.description}</p>
                       <ul className="mt-7 space-y-3">
@@ -461,11 +484,24 @@ export default function HomePage() {
                           </li>
                         ))}
                       </ul>
+                      <div className={`home-path-photo relative mt-7 flex h-28 items-end overflow-hidden rounded-2xl border ${index === 0 ? 'border-white/10' : 'border-black/10'}`}>
+                        <img
+                          src={path.image}
+                          alt={path.imageLabel}
+                          loading="lazy"
+                          decoding="async"
+                          className="home-path-photo-image absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div className={`absolute inset-0 ${index === 0 ? 'home-path-photo-shade-dark' : 'home-path-photo-shade-lime'}`} />
+                        <span className={`relative z-10 px-4 pb-3 text-[10px] font-bold uppercase tracking-[0.16em] ${index === 0 ? 'text-white/80' : 'text-[#171910]/80'}`}>
+                          {path.imageCaption}
+                        </span>
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => path.onChoose({ setActivePage })}
-                      className={`relative mt-9 inline-flex min-h-14 items-center justify-between rounded-full px-6 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#d8ff43] focus:ring-offset-2 ${index === 0 ? 'border border-white/20 text-white hover:border-[#d8ff43]/70 hover:text-[#d8ff43] focus:ring-offset-[#151711]' : 'bg-[#10110d] text-white hover:bg-[#202219] focus:ring-offset-[#d8ff43]'}`}
+                      className={`relative mt-6 inline-flex min-h-14 items-center justify-between rounded-full px-6 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#d8ff43] focus:ring-offset-2 ${index === 0 ? 'border border-white/20 text-white hover:border-[#d8ff43]/70 hover:text-[#d8ff43] focus:ring-offset-[#151711]' : 'bg-[#10110d] text-white hover:bg-[#202219] focus:ring-offset-[#d8ff43]'}`}
                     >
                       {path.cta}<ArrowRight className="h-4 w-4" />
                     </button>
@@ -476,12 +512,11 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="builds" className="home-section home-builds scroll-mt-24 py-20 sm:py-28">
+        <section id="builds" className="home-section home-builds scroll-mt-24 py-12 sm:py-16">
           <div className="mx-auto max-w-[1320px] px-5 sm:px-8 lg:px-12">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="home-reveal" data-home-reveal="left">
-                <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#d8ff43]"><Sparkles className="h-3.5 w-3.5" /> Tested starting points</p>
-                <h2 className="mt-4 text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">Builds with a purpose.</h2>
+                <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">Builds with a purpose.</h2>
                 <p className="mt-4 max-w-xl text-sm leading-6 text-white/55">Choose a balanced preset and load it straight into the builder to make it your own.</p>
               </div>
               <button
@@ -495,7 +530,7 @@ export default function HomePage() {
             </div>
 
             {loading ? (
-              <div className="mt-10 grid gap-6 lg:grid-cols-2" aria-label="Loading preset builds">
+              <div className="mt-8 grid gap-6 lg:grid-cols-2" aria-label="Loading preset builds">
                 {[0, 1].map((index) => (
                   <div key={index} className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#151711]">
                     <div className="aspect-[1.45] animate-pulse bg-white/10" />
@@ -504,13 +539,13 @@ export default function HomePage() {
                 ))}
               </div>
             ) : presets.length > 0 ? (
-              <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 {presets.slice(0, 2).map((preset, index) => (
                   <PresetCard key={preset.id ?? preset.name ?? index} preset={preset} index={index} onLoad={loadPreset} />
                 ))}
               </div>
             ) : (
-              <div className="home-reveal mt-10 rounded-[1.75rem] border border-white/10 bg-[#151711] px-6 py-12 text-center" data-home-reveal="up">
+              <div className="home-reveal mt-8 rounded-[1.75rem] border border-white/10 bg-[#151711] px-6 py-10 text-center" data-home-reveal="up">
                 <p className="text-lg font-semibold text-white">{presetError ? 'Preset builds are temporarily unavailable.' : 'Preset builds are being prepared.'}</p>
                 <p className="mt-2 text-sm text-white/55">You can still build a PC from the ground up.</p>
                 <button type="button" onClick={() => navigateTo('configurator')} className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#d8ff43] px-5 py-3 text-sm font-bold text-[#171910] hover:bg-[#cafa25]">
@@ -521,11 +556,10 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="home-section home-cta px-5 py-20 text-white sm:px-8 sm:py-28 lg:px-12">
-          <div className="home-reveal mx-auto flex max-w-[1320px] flex-col gap-8 rounded-[2rem] border border-white/10 bg-[#151711] p-7 sm:p-12 lg:flex-row lg:items-end lg:justify-between lg:p-16" data-home-reveal="up">
+        <section className="home-section home-cta px-5 py-12 text-white sm:px-8 sm:py-16 lg:px-12">
+          <div className="home-reveal mx-auto flex max-w-[1320px] flex-col gap-6 rounded-[2rem] border border-white/10 bg-[#151711] p-7 sm:p-10 lg:flex-row lg:items-end lg:justify-between lg:p-12" data-home-reveal="up">
             <div className="max-w-3xl">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#d8ff43]">Ready when you are</p>
-              <h2 className="mt-4 text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">Stop comparing.<br />Start building.</h2>
+              <h2 className="text-4xl font-semibold leading-[0.98] tracking-[-0.07em] sm:text-6xl">Stop comparing.<br />Start building.</h2>
               <p className="mt-5 max-w-xl text-sm leading-7 text-white/60">Your next PC starts with the parts that fit your life and your budget.</p>
             </div>
             <button
@@ -541,9 +575,8 @@ export default function HomePage() {
 
       <footer className="bg-[#10110d] px-5 pb-8 text-white sm:px-8 lg:px-12">
         <div className="mx-auto flex max-w-[1320px] flex-col gap-6 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
-          <button type="button" onClick={() => scrollTo('top')} className="inline-flex items-center gap-3 self-start text-left">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#d8ff43] text-[#14160e]"><Cpu className="h-4 w-4" /></span>
-            <span className="text-sm font-semibold">BuildO<span className="text-[#d8ff43]">.</span></span>
+          <button type="button" onClick={() => scrollTo('top')} className="inline-flex items-center self-start text-left">
+            <BuildOWordmark size="footer" />
           </button>
           <p className="max-w-sm text-xs leading-5 text-white/45">PC recommendations for people who care about the experience, not the spec-sheet headache.</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/50">

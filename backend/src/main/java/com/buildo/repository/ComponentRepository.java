@@ -8,11 +8,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ComponentRepository extends JpaRepository<Component, Long> {
     List<Component> findByCategory(Category category);
     List<Component> findByCategoryAndInStockTrue(Category category);
+    Optional<Component> findFirstByModel(String model);
     
     @Query("SELECT c FROM Component c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(c.brand) LIKE LOWER(CONCAT('%', :query, '%')) " +

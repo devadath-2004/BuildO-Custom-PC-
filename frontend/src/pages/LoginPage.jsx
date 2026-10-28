@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Cpu, Eye, EyeOff, KeyRound,
+  ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, KeyRound,
   LoaderCircle, Lock, Mail, MailCheck, RefreshCw, ShieldCheck, Sparkles,
   User as UserIcon,
 } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { useApp } from '../context/AppContext';
 import useGestures from '../hooks/useGestures';
+import BuildOWordmark from '../components/BuildOWordmark';
 
 const inputClass = 'w-full rounded-xl border border-[#d9d8cd] bg-white px-4 py-3 text-sm text-[#171910] placeholder:text-[#96978e] outline-none transition duration-200 focus:border-[#829c12] focus:ring-4 focus:ring-[#d8ff43]/35 disabled:cursor-not-allowed disabled:bg-[#f0efe8]';
 
@@ -141,13 +142,10 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => setActivePage('home')}
-          className="inline-flex items-center gap-3 text-left transition hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-[#d8ff43] focus:ring-offset-2 focus:ring-offset-[#10110d]"
+          className="inline-flex items-center text-left transition hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-[#d8ff43] focus:ring-offset-2 focus:ring-offset-[#10110d]"
           aria-label="Go to BuildO home"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d8ff43] text-[#14160e] shadow-[0_10px_30px_rgba(216,255,67,0.18)]">
-            <Cpu className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <span className="text-lg font-semibold tracking-[-0.04em]">BuildO<span className="text-[#d8ff43]">.</span></span>
+          <BuildOWordmark size="nav" />
         </button>
         <button
           type="button"
@@ -194,7 +192,7 @@ export default function LoginPage() {
           <div className="relative">
             <div className="mb-7 flex items-center justify-between gap-4 lg:hidden">
               <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#6f772f]"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" />Build with confidence</div>
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#171910] text-[#d8ff43]"><Cpu className="h-4 w-4" aria-hidden="true" /></span>
+              <span className="rounded-lg bg-[#171910] px-2.5 py-2"><BuildOWordmark size="compact" /></span>
             </div>
             <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6f772f]">Account access</p>
             <h2 className="max-w-sm text-4xl font-semibold leading-[0.98] tracking-[-0.06em] text-[#171910] sm:text-5xl">{title}</h2>

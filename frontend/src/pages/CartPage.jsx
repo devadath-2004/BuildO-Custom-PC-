@@ -60,7 +60,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="buildo-shop-page buildo-cart-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="buildo-shop-page buildo-cart-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <span className="buildo-page-eyebrow">YOUR SELECTED BUILD</span>
