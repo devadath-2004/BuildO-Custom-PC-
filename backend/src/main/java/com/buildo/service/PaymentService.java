@@ -13,6 +13,8 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,11 +31,14 @@ import java.util.Optional;
 @Service
 public class PaymentService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
     private static final long VERIFICATION_AMOUNT_PAISE = 100L;
 
     private final OrderRepository orderRepository;
     private final InvoiceRepository invoiceRepository;
     private final OrderService orderService;
+    private final OtpService otpService;
+    private final InvoicePdfService invoicePdfService;
     private final ObjectMapper objectMapper;
 
     @Value("${razorpay.key-id:}")
@@ -53,10 +58,14 @@ public class PaymentService {
     public PaymentService(OrderRepository orderRepository,
                           InvoiceRepository invoiceRepository,
                           OrderService orderService,
+                          OtpService otpService,
+                          InvoicePdfService invoicePdfService,
                           ObjectMapper objectMapper) {
         this.orderRepository = orderRepository;
         this.invoiceRepository = invoiceRepository;
         this.orderService = orderService;
+        this.otpService = otpService;
+        this.invoicePdfService = invoicePdfService;
         this.objectMapper = objectMapper;
     }
 
@@ -152,6 +161,8 @@ public class PaymentService {
                 order.setRazorpayVerificationPaymentId(null);
                 order.setRazorpayVerificationRefundId(null);
                 order.setRazorpayVerificationRefundStatus(null);
+                order.setRazorpayVerificationReceiptEmailSent(false);
+                order.setRazorpayVerificationTestPaid(false);
                 orderRepository.save(order);
             } catch (RazorpayException ex) {
                 throw new ResponseStatusException(HttpStatus.BAD_GATEWAY,
@@ -245,7 +256,7 @@ public class PaymentService {
                     : "Payment is being confirmed. This page will update when Razorpay confirms capture.";
             return new PaymentVerificationResponse(
                     order.getId(), order.getOrderNumber(), order.getPaymentStatus().name(),
-                    invoiceNumber, order.getFinalAmount(), message);
+                    invoiceNumber, order.getFinalAmount(), message, false, false);
         } catch (RazorpayException ex) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Could not verify the Razorpay payment.", ex);
@@ -255,10 +266,21 @@ public class PaymentService {
     private PaymentVerificationResponse verifyAndRefundTestPayment(Order order, Payment payment,
                                                                     String paymentId, long amountPaise)
             throws RazorpayException {
+        if (order.isRazorpayVerificationTestPaid()) {
+            if (!paymentId.equals(order.getRazorpayVerificationPaymentId())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "A different ₹1 verification payment is already recorded for this demo order.");
+            }
+            return completeVerificationTestPayment(order, paymentId,
+                    mapPaymentMethod(safeString(payment.get("method"))),
+                    "This order is already marked paid in the local Razorpay test/demo flow.");
+        }
+
         if (paymentId.equals(order.getRazorpayVerificationPaymentId())
                 && "REFUND_INITIATED".equals(order.getRazorpayVerificationRefundStatus())) {
-            return verificationResponse(order, "VERIFICATION_REFUND_INITIATED",
-                    "Razorpay verification is complete. The ₹1 refund has already been requested; the BuildO order remains unpaid.");
+            return completeVerificationTestPayment(order, paymentId,
+                    mapPaymentMethod(safeString(payment.get("method"))),
+                    "Razorpay verified the ₹1 test payment and the refund was already requested.");
         }
 
         String paymentStatus = safeString(payment.get("status"));
@@ -293,8 +315,9 @@ public class PaymentService {
             order.setRazorpayVerificationPaymentId(paymentId);
             order.setRazorpayVerificationRefundStatus("REFUND_INITIATED");
             orderRepository.save(order);
-            return verificationResponse(order, "VERIFICATION_REFUND_INITIATED",
-                    "Razorpay verified the ₹1 test payment and reports it as fully refunded. The BuildO order remains unpaid.");
+            return completeVerificationTestPayment(order, paymentId,
+                    mapPaymentMethod(safeString(payment.get("method"))),
+                    "Razorpay verified the ₹1 test payment and reports it as fully refunded.");
         }
 
         try {
@@ -309,28 +332,63 @@ public class PaymentService {
                 order.setRazorpayVerificationPaymentId(paymentId);
                 order.setRazorpayVerificationRefundStatus("REFUND_FAILED");
                 orderRepository.save(order);
-                return verificationResponse(order, "VERIFICATION_REFUND_FAILED",
-                        "The ₹1 payment was verified, but Razorpay did not return a refund ID. Keep this window open and retry the status check; do not start another payment.");
+                return completeVerificationTestPayment(order, paymentId,
+                        mapPaymentMethod(safeString(payment.get("method"))),
+                        "Razorpay verified the ₹1 test payment, but did not return a refund ID.");
             }
 
             order.setRazorpayVerificationPaymentId(paymentId);
             order.setRazorpayVerificationRefundId(refundId);
             order.setRazorpayVerificationRefundStatus("REFUND_INITIATED");
             orderRepository.save(order);
-            return verificationResponse(order, "VERIFICATION_REFUND_INITIATED",
-                    "Razorpay verified the ₹1 test payment and accepted a full refund request (" + refundId + "). The BuildO order remains unpaid.");
+            return completeVerificationTestPayment(order, paymentId,
+                    mapPaymentMethod(safeString(payment.get("method"))),
+                    "Razorpay verified the ₹1 test payment and accepted a full refund request (" + refundId + ").");
         } catch (RazorpayException ex) {
             order.setRazorpayVerificationPaymentId(paymentId);
             order.setRazorpayVerificationRefundStatus("REFUND_FAILED");
             orderRepository.save(order);
-            return verificationResponse(order, "VERIFICATION_REFUND_FAILED",
-                    "The ₹1 payment was verified, but Razorpay could not start its refund. Keep this window open and retry the status check; do not start another payment.");
+            return completeVerificationTestPayment(order, paymentId,
+                    mapPaymentMethod(safeString(payment.get("method"))),
+                    "Razorpay verified the ₹1 test payment, but could not start its refund.");
         }
+    }
+
+    private PaymentVerificationResponse completeVerificationTestPayment(Order order, String paymentId,
+                                                                         PaymentMethod method, String message) {
+        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setTransactionId(paymentId);
+        if (method != null) {
+            order.setPaymentMethod(method);
+        }
+        order.setRazorpayVerificationTestPaid(true);
+        orderRepository.save(order);
+
+        if (!order.isRazorpayVerificationReceiptEmailSent()) {
+            try {
+                byte[] receiptPdf = invoicePdfService.generateVerificationReceiptPdf(order, paymentId);
+                boolean sent = otpService.sendVerificationReceipt(order, paymentId, receiptPdf);
+                if (sent) {
+                    order.setRazorpayVerificationReceiptEmailSent(true);
+                    orderRepository.save(order);
+                }
+            } catch (Exception ex) {
+                logger.error("Could not create the Razorpay test receipt PDF for order {}", order.getOrderNumber(), ex);
+            }
+        }
+
+        String receiptMessage = order.isRazorpayVerificationReceiptEmailSent()
+                ? " The order is marked PAID in test/demo mode, and the PDF receipt was emailed. The full build amount was not charged."
+                : " The order is marked PAID in test/demo mode, but its PDF receipt could not be emailed. Check SMTP settings and the backend log. The full build amount was not charged.";
+        return new PaymentVerificationResponse(order.getId(), order.getOrderNumber(), "PAID", null,
+                order.getFinalAmount(), message + receiptMessage,
+                order.isRazorpayVerificationReceiptEmailSent(), true);
     }
 
     private PaymentVerificationResponse verificationResponse(Order order, String status, String message) {
         return new PaymentVerificationResponse(
-                order.getId(), order.getOrderNumber(), status, null, order.getFinalAmount(), message);
+                order.getId(), order.getOrderNumber(), status, null, order.getFinalAmount(), message,
+                order.isRazorpayVerificationReceiptEmailSent(), order.isRazorpayVerificationTestPaid());
     }
 
     @Transactional

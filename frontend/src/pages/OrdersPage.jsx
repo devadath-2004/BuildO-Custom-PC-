@@ -160,26 +160,39 @@ export default function OrdersPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setSelectedOrderForInvoice(order)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs font-semibold transition-colors"
-                    >
-                      <FileText className="w-4 h-4" />
-                      View Invoice
-                    </button>
+                    {order.razorpayVerificationTestPaid ? (
+                      <div className="rounded-xl border border-amber-700/50 bg-amber-950/30 px-4 py-2 text-[11px] font-semibold text-amber-200">
+                        {order.razorpayVerificationReceiptEmailSent ? 'TEST MODE · PDF receipt emailed' : 'TEST MODE · receipt email failed'}
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => setSelectedOrderForInvoice(order)}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs font-semibold transition-colors"
+                        >
+                          <FileText className="w-4 h-4" />
+                          View Invoice
+                        </button>
 
-                    <button
-                      onClick={() => apiClient.downloadInvoicePdf(order.id, order.orderNumber)}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold shadow-md shadow-cyan-500/20 transition-all"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      Download PDF
-                    </button>
+                        <button
+                          onClick={() => apiClient.downloadInvoicePdf(order.id, order.orderNumber)}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold shadow-md shadow-cyan-500/20 transition-all"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Download PDF
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* Visual Order Progress Tracker */}
-                <div className="py-2">
+                {order.razorpayVerificationTestPaid ? (
+                  <div className="rounded-xl border border-amber-700/40 bg-amber-950/20 px-4 py-3 text-xs leading-relaxed text-amber-100">
+                    <strong className="block">Demo payment complete · not queued for assembly or delivery</strong>
+                    The order is marked paid only for testing. The ₹1 test payment did not pay the full build total.
+                  </div>
+                ) : <div className="py-2">
                   <div className="text-xs font-mono font-bold uppercase text-slate-400 mb-4 flex items-center justify-between">
                     <span>Assembly & Delivery Progress:</span>
                     <span className="text-emerald-400 font-semibold font-mono">
@@ -230,7 +243,7 @@ export default function OrdersPage() {
                       })}
                     </div>
                   </div>
-                </div>
+                </div>}
 
                 {/* Metadata & Components Drawer */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-800 text-xs">
@@ -243,13 +256,16 @@ export default function OrdersPage() {
 
                   <div className="p-4 rounded-xl bg-dark-950 border border-slate-800">
                     <span className="text-slate-500 uppercase font-mono text-[10px] block font-bold">Payment & Tracking:</span>
-                    <span className="text-slate-300 block mt-1">Mode: <strong className="text-cyan-400">{order.paymentMethod || 'Razorpay'}</strong></span>
+                    <span className="text-slate-300 block mt-1">Mode: <strong className={order.razorpayVerificationTestPaid ? 'text-amber-300' : 'text-cyan-400'}>{order.razorpayVerificationTestPaid ? 'Razorpay Test' : (order.paymentMethod || 'Razorpay')}</strong></span>
                     <span className="text-slate-400 block font-mono text-[11px]">Txn: {order.transactionId || 'PAID'}</span>
+                    {order.razorpayVerificationTestPaid && (
+                      <span className="mt-1 block text-[10px] leading-relaxed text-amber-200/80">₹1 test verified. Full build amount not charged; this demo order is not for fulfillment.</span>
+                    )}
                     <span className="text-slate-400 block font-mono text-[11px]">Track: {order.trackingNumber || 'TRK-IN-TRANSIT'}</span>
                   </div>
 
                   <div className="p-4 rounded-xl bg-dark-950 border border-slate-800 text-right flex flex-col justify-center">
-                    <span className="text-slate-500 uppercase font-mono text-[10px] block font-bold">Total Paid:</span>
+                    <span className="text-slate-500 uppercase font-mono text-[10px] block font-bold">{order.razorpayVerificationTestPaid ? 'Build total (not charged):' : 'Total Paid:'}</span>
                     <span className="text-2xl font-black text-cyan-400 font-mono mt-0.5">
                       ₹{Number(order.finalAmount).toLocaleString('en-IN')}
                     </span>

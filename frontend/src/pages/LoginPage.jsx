@@ -11,8 +11,8 @@ import BuildOWordmark from '../components/BuildOWordmark';
 
 const inputClass = 'w-full rounded-xl border border-[#d9d8cd] bg-white px-4 py-3 text-sm text-[#171910] placeholder:text-[#96978e] outline-none transition duration-200 focus:border-[#829c12] focus:ring-4 focus:ring-[#d8ff43]/35 disabled:cursor-not-allowed disabled:bg-[#f0efe8]';
 
-function FieldLabel({ children }) {
-  return <label className="mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#62645b]">{children}</label>;
+function FieldLabel({ children, className = '' }) {
+  return <label className={`mb-2 block text-[10px] font-bold uppercase tracking-[0.18em] text-[#62645b] ${className}`}>{children}</label>;
 }
 
 export default function LoginPage() {
@@ -38,6 +38,14 @@ export default function LoginPage() {
     setDevOtp('');
   }
 
+  function openForgotPassword() {
+    const enteredEmail = username.trim();
+    setEmail(enteredEmail.includes('@') ? enteredEmail : '');
+    setOtp('');
+    setDevOtp('');
+    setStep('forgot-email');
+  }
+
   useGestures(containerRef, {
     onPinch: (scale) => setImageScale((current) => Math.min(Math.max(current * scale, 0.9), 1.15)),
     onSwipe: (direction) => {
@@ -57,6 +65,33 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     try {
+      if (step === 'forgot-email') {
+        const response = await apiClient.requestPasswordReset(email.trim());
+        setDevOtp(response.devOtp || '');
+        setOtp('');
+        setCountdown(60);
+        setStep('forgot-otp');
+        showNotification(response.message || 'If an account exists for this email, a verification code was sent.', 'info');
+        return;
+      }
+
+      if (step === 'forgot-otp') {
+        if (!otp || otp.trim().length < 6) {
+          showNotification('Please enter the full 6-digit verification code.', 'error');
+          return;
+        }
+        await apiClient.resetPassword({ email: email.trim(), otp: otp.trim() });
+        setIsLogin(true);
+        setStep('form');
+        setUsername(email.trim());
+        setPassword('');
+        setOtp('');
+        setDevOtp('');
+        setCountdown(0);
+        showNotification('Email verified. Your new generated password was sent to your inbox.', 'success');
+        return;
+      }
+
       if (isLogin) {
         const response = await apiClient.login({ usernameOrEmail: username, password });
         apiClient.setToken(response.token);
@@ -117,12 +152,36 @@ export default function LoginPage() {
     }
   };
 
-  const title = isLogin ? 'Welcome back.' : step === 'otp' ? 'Check your inbox.' : 'Make it yours.';
-  const intro = isLogin
-    ? 'Sign in to pick up your build, parts list, and orders.'
-    : step === 'otp'
-      ? `We sent a six-digit verification code to ${email}.`
-      : 'Save your builds, compare compatible parts, and check out when you are ready.';
+  const handleResendPasswordResetCode = async () => {
+    if (countdown > 0 || loading) return;
+    setLoading(true);
+    try {
+      const response = await apiClient.requestPasswordReset(email.trim());
+      setDevOtp(response.devOtp || '');
+      setOtp('');
+      setCountdown(60);
+      showNotification(response.message || 'If an account exists for this email, a new code was sent.', 'info');
+    } catch (error) {
+      showNotification(error.message || 'Could not request a new code. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const title = step === 'forgot-email'
+    ? 'Reset your password.'
+    : step === 'forgot-otp'
+      ? 'Verify your email.'
+      : isLogin ? 'Welcome back.' : step === 'otp' ? 'Check your inbox.' : 'Make it yours.';
+  const intro = step === 'forgot-email'
+    ? 'Enter your account email. We’ll send a code to verify it before emailing a new generated password.'
+    : step === 'forgot-otp'
+      ? `Enter the six-digit code sent to ${email}. We’ll email a new generated password after verification.`
+      : isLogin
+        ? 'Sign in to pick up your build, parts list, and orders.'
+        : step === 'otp'
+          ? `We sent a six-digit verification code to ${email}.`
+          : 'Save your builds, compare compatible parts, and check out when you are ready.';
 
   return (
     <div ref={containerRef} className="relative min-h-screen overflow-x-hidden bg-[#10110d] font-sans text-white">
@@ -229,7 +288,18 @@ export default function LoginPage() {
                     </div>
                   </>}
                   <div>
-                    <FieldLabel>Password</FieldLabel>
+                    <div className="mb-2 flex items-center justify-between gap-4">
+                      <FieldLabel className="mb-0">Password</FieldLabel>
+                      {isLogin && (
+                        <button
+                          type="button"
+                          onClick={openForgotPassword}
+                          className="text-xs font-bold text-[#4f6510] underline decoration-[#a1bc37] underline-offset-4 transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12]"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
                     <div className="relative">
                       <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c7d75]" aria-hidden="true" />
                       <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" className={`${inputClass} pl-11 pr-12`} autoComplete={isLogin ? 'current-password' : 'new-password'} />
@@ -247,7 +317,7 @@ export default function LoginPage() {
                     <button type="button" onClick={() => handleSwitchTab(!isLogin)} className="font-bold text-[#4f6510] underline decoration-[#a1bc37] underline-offset-4 transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12]">{isLogin ? 'Create an account' : 'Sign in'}</button>
                   </p>
                 </>
-              ) : (
+              ) : step === 'otp' ? (
                 <>
                   <div className="rounded-2xl border border-[#d9d8cd] bg-[#eeede5] p-4">
                     <div className="flex items-start justify-between gap-3">
@@ -283,6 +353,58 @@ export default function LoginPage() {
                     {loading ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />}
                   </button>
                   <button type="button" onClick={() => setStep('form')} className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-semibold text-[#686960] transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12]"><ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />Back to account details</button>
+                </>
+              ) : step === 'forgot-email' ? (
+                <>
+                  <div>
+                    <FieldLabel>Email address</FieldLabel>
+                    <div className="relative">
+                      <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7c7d75]" aria-hidden="true" />
+                      <input type="email" required autoFocus value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" className={`${inputClass} pl-11`} autoComplete="email" />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={loading} className="group mt-2 flex w-full items-center justify-between rounded-xl bg-[#d8ff43] px-5 py-3.5 text-sm font-bold text-[#171910] shadow-[0_14px_32px_rgba(166,202,37,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#cafa25] focus:outline-none focus:ring-2 focus:ring-[#829c12] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55">
+                    <span>{loading ? 'Sending code…' : 'Send verification code'}</span>
+                    {loading ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />}
+                  </button>
+                  <button type="button" onClick={() => setStep('form')} className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-semibold text-[#686960] transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12]"><ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />Back to sign in</button>
+                </>
+              ) : (
+                <>
+                  <div className="rounded-2xl border border-[#d9d8cd] bg-[#eeede5] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#171910] text-[#d8ff43]"><MailCheck className="h-4 w-4" aria-hidden="true" /></span>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#77786f]">{devOtp ? 'Development code for' : 'Verification code sent to'}</p>
+                          <p className="truncate pt-1 text-sm font-semibold text-[#171910]">{email}</p>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setStep('forgot-email')} className="shrink-0 text-xs font-bold text-[#4f6510] underline underline-offset-4 transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12]">Change</button>
+                    </div>
+                  </div>
+                  <div>
+                    <FieldLabel>Six-digit code</FieldLabel>
+                    <div className="relative">
+                      <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#6f772f]" aria-hidden="true" />
+                      <input type="text" inputMode="numeric" maxLength={6} autoFocus value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))} placeholder="••••••" className={`${inputClass} min-h-[58px] pl-12 pr-4 text-center font-mono text-2xl tracking-[0.38em] placeholder:tracking-[0.3em]`} aria-label="Password reset verification code" />
+                    </div>
+                    {devOtp && <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#b8ca64] bg-[#f3f8da] px-3 py-2.5 text-xs text-[#3f500e]">
+                      <span>Development code: <strong className="font-mono text-sm text-[#171910]">{devOtp}</strong></span>
+                      <button type="button" onClick={() => setOtp(devOtp)} className="rounded-lg border border-[#a8bf43] bg-white px-2.5 py-1 font-bold transition hover:bg-[#d8ff43] focus:outline-none focus:ring-2 focus:ring-[#829c12]">Fill code</button>
+                    </div>}
+                  </div>
+                  <div className="flex items-center justify-between gap-4 px-1 text-xs text-[#72736b]">
+                    <span>Didn’t receive it?</span>
+                    {countdown > 0
+                      ? <span>Resend in <strong className="font-mono text-[#4f6510]">{countdown}s</strong></span>
+                      : <button type="button" onClick={handleResendPasswordResetCode} disabled={loading} className="inline-flex items-center gap-1.5 font-bold text-[#4f6510] underline underline-offset-4 transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12] disabled:opacity-50"><RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />Resend code</button>}
+                  </div>
+                  <button type="submit" disabled={loading || otp.length < 6} className="group mt-2 flex w-full items-center justify-between rounded-xl bg-[#d8ff43] px-5 py-3.5 text-sm font-bold text-[#171910] shadow-[0_14px_32px_rgba(166,202,37,0.25)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#cafa25] focus:outline-none focus:ring-2 focus:ring-[#829c12] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-55">
+                    <span>{loading ? 'Verifying email…' : 'Verify email and send password'}</span>
+                    {loading ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />}
+                  </button>
+                  <button type="button" onClick={() => setStep('form')} className="flex w-full items-center justify-center gap-1.5 py-1 text-xs font-semibold text-[#686960] transition hover:text-[#171910] focus:outline-none focus:ring-2 focus:ring-[#829c12]"><ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />Back to sign in</button>
                 </>
               )}
             </form>

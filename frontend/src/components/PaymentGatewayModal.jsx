@@ -48,6 +48,14 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
         || result.paymentStatus === 'VERIFICATION_CAPTURE_FAILED') {
         setFailureState(result.message || 'Razorpay verified the test payment, but could not complete its refund.');
         showNotification('Keep this checkout open and retry the status check; do not make another payment.', 'error');
+      } else if (result.paymentStatus === 'PAID' && result.demoPayment) {
+        showNotification(
+          result.verificationReceiptEmailSent
+            ? '₹1 test verified. Order marked paid in demo mode; PDF receipt emailed.'
+            : '₹1 test verified. Order marked paid in demo mode, but the receipt email failed.',
+          result.verificationReceiptEmailSent ? 'success' : 'info'
+        );
+        onSuccess(result);
       } else if (result.paymentStatus === 'PAID') {
         showNotification('Razorpay payment captured successfully.', 'success');
         onSuccess(result);
@@ -151,7 +159,7 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
               <div className="space-y-1">
                 <strong className="block text-sm">Razorpay test payment verified</strong>
                 <span className="block">{verificationResult.message}</span>
-                <span className="block text-emerald-300/80">Test mode does not move real money. Your order remains unpaid and no invoice was created.</span>
+                <span className="block text-emerald-300/80">A ₹1 test payment marks the order paid only in demo mode. The full build total is not charged or eligible for fulfillment.</span>
               </div>
             </div>
           )}
@@ -216,7 +224,7 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
               {verificationMode
                 ? showPersonalQr
                   ? 'This payment goes directly to the personal UPI account shown above. It is separate from Razorpay Test Mode and needs manual payment confirmation and refund.'
-                  : 'Razorpay Checkout uses simulated test-mode ₹1 verification and BuildO requests a full refund in test mode. The order total above is not charged, and the BuildO order remains unpaid.'
+                  : 'Razorpay Checkout uses simulated test-mode ₹1 verification, then marks the order paid for the demo flow. The full order total is not charged, and fulfillment stays disabled.'
                 : 'Choose an available payment method in Razorpay’s secure checkout. BuildO never receives or stores your card number or CVV.'}
             </p>
             <div className="flex items-center gap-2 text-[11px] text-slate-500">

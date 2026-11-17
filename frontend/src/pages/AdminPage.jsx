@@ -924,7 +924,9 @@ export default function AdminPage() {
 
                               <td className="p-3.5">
                                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40 whitespace-nowrap">
-                                  {o.paymentMethod || 'Razorpay'} • {o.paymentStatus}
+                                  {o.razorpayVerificationTestPaid
+                                    ? 'Razorpay TEST • PAID (DEMO)'
+                                    : `${o.paymentMethod || 'Razorpay'} • ${o.paymentStatus}`}
                                 </span>
                               </td>
 
@@ -933,6 +935,7 @@ export default function AdminPage() {
                                 <select
                                   value={o.status}
                                   onChange={e => handleUpdateStatus(o.id, e.target.value, o.trackingNumber)}
+                                  disabled={o.razorpayVerificationTestPaid}
                                   className={`border rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none cursor-pointer transition-all ${
                                     o.status === 'CONFIRMED'
                                       ? 'bg-blue-950/80 border-blue-600/60 text-blue-300'
@@ -951,6 +954,11 @@ export default function AdminPage() {
                                   <option value="DELIVERED">DELIVERED</option>
                                   <option value="CANCELLED">CANCELLED</option>
                                 </select>
+                                {o.razorpayVerificationTestPaid && (
+                                  <span className="mt-1 block max-w-36 text-[10px] leading-relaxed text-amber-300">
+                                    Demo only · fulfillment disabled
+                                  </span>
+                                )}
                               </td>
 
                               {/* Real-Time Tracking Number Updating */}

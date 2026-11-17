@@ -2,10 +2,9 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { apiClient } from '../api/client';
 import PaymentGatewayModal from '../components/PaymentGatewayModal';
-import InvoiceView from '../components/InvoiceView';
 import { 
   Lock, MapPin, Mail, Phone, User as UserIcon, 
-  ArrowRight, CheckCircle2, ChevronLeft 
+  ArrowRight, ChevronLeft
 } from 'lucide-react';
 
 export default function CheckoutPage() {
@@ -15,8 +14,7 @@ export default function CheckoutPage() {
     user, 
     setActivePage, 
     showNotification,
-    discountCode,
-    setSelectedOrderForInvoice 
+    discountCode
   } = useApp();
 
   const [customerName, setCustomerName] = useState(user?.fullName || '');
@@ -28,8 +26,6 @@ export default function CheckoutPage() {
 
   const [loading, setLoading] = useState(false);
   const [activePaymentOrder, setActivePaymentOrder] = useState(null);
-  const [completedOrder, setCompletedOrder] = useState(null);
-  const [completedInvoice, setCompletedInvoice] = useState(null);
 
   const subtotal = cart.reduce((sum, item) => {
     const itemQuantity = item.quantity || 1;
@@ -107,87 +103,32 @@ export default function CheckoutPage() {
     setActivePaymentOrder(null);
     clearCart();
 
+    if (paymentResponse.demoPayment) {
+      showNotification(
+        paymentResponse.verificationReceiptEmailSent
+          ? 'Demo order marked PAID. The ₹1 test receipt PDF was emailed; the full build amount was not charged.'
+          : 'Demo order marked PAID, but the ₹1 test receipt email failed. Check the backend SMTP settings.',
+        paymentResponse.verificationReceiptEmailSent ? 'success' : 'info'
+      );
+      setActivePage('orders');
+      return;
+    }
+
     try {
-      const refreshedOrder = await apiClient.getOrderById(paymentResponse.orderId);
-      const invoiceData = await apiClient.getInvoiceByOrderId(paymentResponse.orderId);
-
-      setCompletedOrder(refreshedOrder);
-      setCompletedInvoice(invoiceData);
-      setSelectedOrderForInvoice(refreshedOrder);
-
-      showNotification(`Payment verified! Order #${refreshedOrder.orderNumber} is confirmed!`, 'success');
+      const [refreshedOrder, invoiceData] = await Promise.all([
+        apiClient.getOrderById(paymentResponse.orderId),
+        apiClient.getInvoiceByOrderId(paymentResponse.orderId)
+      ]);
+      showNotification(
+        `Payment verified! Invoice ${invoiceData.invoiceNumber} is ready for order #${refreshedOrder.orderNumber}.`,
+        'success'
+      );
     } catch (err) {
       console.error(err);
+      showNotification('Payment was verified. Your order is opening; you can retry the invoice from Orders.', 'info');
     }
+    setActivePage('orders');
   };
-
-  // If order completed, show success screen with digital invoice viewer
-  if (completedOrder) {
-    return (
-      <div className="buildo-shop-page buildo-checkout-page max-w-4xl mx-auto px-4 py-8 space-y-6 animate-in fade-in duration-300">
-        <div className="p-8 rounded-3xl bg-dark-900 border border-emerald-500/40 shadow-2xl text-center space-y-4 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mx-auto shadow-lg shadow-emerald-500/20">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-
-          <span className="text-xs uppercase font-mono font-bold text-emerald-400 tracking-wider">
-            Order confirmed
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-white">
-            Your build is on its way.
-          </h1>
-          <p className="text-sm text-slate-300 max-w-lg mx-auto">
-            Your custom configuration is confirmed. We’ll keep you updated as it moves through assembly and delivery.
-          </p>
-
-          <div className="inline-flex items-center gap-4 p-4 rounded-xl bg-dark-950 border border-slate-800 text-xs font-mono">
-            <div>
-              <span className="text-slate-500 block">Order Ref:</span>
-              <span className="text-cyan-400 font-bold text-sm">{completedOrder.orderNumber}</span>
-            </div>
-            <div className="border-l border-slate-800 pl-4">
-              <span className="text-slate-500 block">Tracking ID:</span>
-              <span className="text-white font-bold">{completedOrder.trackingNumber}</span>
-            </div>
-            <div className="border-l border-slate-800 pl-4">
-              <span className="text-slate-500 block">Transaction:</span>
-              <span className="text-emerald-400 font-bold">{completedOrder.transactionId}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-            <button
-              onClick={() => setSelectedOrderForInvoice(completedOrder)}
-              className="px-6 py-3 rounded-xl bg-[#d8ff43] hover:bg-[#cafa25] text-[#171910] font-bold text-xs shadow-lg shadow-[#d8ff43]/15 transition-all"
-            >
-              View & Download PDF Invoice
-            </button>
-            <button
-              onClick={() => setActivePage('orders')}
-              className="px-6 py-3 rounded-xl bg-white/[0.06] hover:bg-white/10 text-slate-200 font-semibold text-xs border border-white/10 transition-all"
-            >
-              Track Order Status
-            </button>
-            <button
-              onClick={() => setActivePage('home')}
-              className="px-6 py-3 rounded-xl bg-transparent hover:bg-white/5 text-slate-400 hover:text-white text-xs transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        </div>
-
-        {/* Embedded Invoice Preview */}
-        <InvoiceView
-          order={completedOrder}
-          invoice={completedInvoice}
-          onClose={() => setSelectedOrderForInvoice(null)}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="buildo-shop-page buildo-checkout-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">

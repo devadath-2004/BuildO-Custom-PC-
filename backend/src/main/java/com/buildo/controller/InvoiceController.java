@@ -73,7 +73,8 @@ public class InvoiceController {
         boolean admin = authentication.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         return orderService.getOrderByIdForUser(orderId, authentication.getName(), admin)
-                .filter(order -> order.getPaymentStatus() == PaymentStatus.PAID);
+                .filter(order -> order.getPaymentStatus() == PaymentStatus.PAID
+                        && !order.isRazorpayVerificationTestPaid());
     }
 
     private Invoice createInvoice(Order order) {

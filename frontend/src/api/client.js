@@ -84,6 +84,20 @@ export const apiClient = {
     });
   },
 
+  requestPasswordReset(email) {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  resetPassword(resetData) {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(resetData)
+    });
+  },
+
   getCurrentUser() {
     return this.request('/auth/me');
   },

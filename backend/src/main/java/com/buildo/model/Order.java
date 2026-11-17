@@ -55,6 +55,8 @@ public class Order {
     private String razorpayVerificationPaymentId;
     private String razorpayVerificationRefundId;
     private String razorpayVerificationRefundStatus;
+    private boolean razorpayVerificationReceiptEmailSent;
+    private boolean razorpayVerificationTestPaid;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
@@ -143,6 +145,16 @@ public class Order {
     public String getRazorpayVerificationRefundStatus() { return razorpayVerificationRefundStatus; }
     public void setRazorpayVerificationRefundStatus(String razorpayVerificationRefundStatus) {
         this.razorpayVerificationRefundStatus = razorpayVerificationRefundStatus;
+    }
+
+    public boolean isRazorpayVerificationReceiptEmailSent() { return razorpayVerificationReceiptEmailSent; }
+    public void setRazorpayVerificationReceiptEmailSent(boolean razorpayVerificationReceiptEmailSent) {
+        this.razorpayVerificationReceiptEmailSent = razorpayVerificationReceiptEmailSent;
+    }
+
+    public boolean isRazorpayVerificationTestPaid() { return razorpayVerificationTestPaid; }
+    public void setRazorpayVerificationTestPaid(boolean razorpayVerificationTestPaid) {
+        this.razorpayVerificationTestPaid = razorpayVerificationTestPaid;
     }
 
     public BigDecimal getSubtotal() { return subtotal; }

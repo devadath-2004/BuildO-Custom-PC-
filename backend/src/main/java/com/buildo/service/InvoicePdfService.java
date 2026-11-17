@@ -1,6 +1,7 @@
 package com.buildo.service;
 
 import com.buildo.model.Invoice;
+import com.buildo.model.Order;
 import com.buildo.model.OrderItem;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
@@ -196,6 +197,75 @@ public class InvoicePdfService {
 
         document.close();
         return out.toByteArray();
+    }
+
+    /** Generates an explicitly non-commercial receipt for the ₹1 Razorpay test-mode flow. */
+    public byte[] generateVerificationReceiptPdf(Order order, String paymentId) throws DocumentException {
+        Document document = new Document(PageSize.A4, 42, 42, 44, 44);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, new Color(20, 24, 33));
+        Font headingFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, new Color(30, 41, 59));
+        Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 10, new Color(71, 85, 105));
+        Font warningFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, new Color(153, 27, 27));
+
+        Paragraph brand = new Paragraph("BuildO", titleFont);
+        brand.setSpacingAfter(3);
+        document.add(brand);
+        Paragraph title = new Paragraph("DEMO PAYMENT RECEIPT — TEST MODE", headingFont);
+        title.setSpacingAfter(14);
+        document.add(title);
+
+        Paragraph warning = new Paragraph(
+                "NOT A TAX INVOICE OR PROOF OF FULL PAYMENT. This local demo marks the order paid for demonstration only. " +
+                        "Only the ₹1.00 Razorpay test payment was verified; the PC build total was not charged. Do not fulfill this order.",
+                warningFont);
+        warning.setSpacingAfter(18);
+        document.add(warning);
+
+        PdfPTable details = new PdfPTable(2);
+        details.setWidthPercentage(100);
+        details.setWidths(new float[]{38, 62});
+        addReceiptRow(details, "BuildO order", safePdfText(order.getOrderNumber()), headingFont, bodyFont);
+        addReceiptRow(details, "Customer", safePdfText(order.getCustomerName()), headingFont, bodyFont);
+        addReceiptRow(details, "Email", safePdfText(order.getCustomerEmail()), headingFont, bodyFont);
+        addReceiptRow(details, "Razorpay payment ID", safePdfText(paymentId), headingFont, bodyFont);
+        addReceiptRow(details, "Demo order status", "PAID (TEST MODE ONLY)", headingFont, bodyFont);
+        addReceiptRow(details, "Test amount verified", "₹1.00 INR", headingFont, bodyFont);
+        addReceiptRow(details, "Refund status", safePdfText(order.getRazorpayVerificationRefundStatus()), headingFont, bodyFont);
+        addReceiptRow(details, "Refund reference", safePdfText(order.getRazorpayVerificationRefundId()), headingFont, bodyFont);
+        addReceiptRow(details, "Build total (reference only)",
+                "₹" + (order.getFinalAmount() == null ? "0.00" : order.getFinalAmount().toPlainString()) + " INR — NOT CHARGED",
+                headingFont, bodyFont);
+        addReceiptRow(details, "Receipt generated", java.time.LocalDateTime.now().format(DATE_FORMATTER), headingFont, bodyFont);
+        document.add(details);
+
+        document.add(new Paragraph(" "));
+        Paragraph note = new Paragraph(
+                "Razorpay test keys simulate payment processing and do not move real money. The displayed build total is included as a reference only. This receipt does not authorize shipping, assembly, or any other order fulfillment.",
+                bodyFont);
+        note.setSpacingBefore(12);
+        document.add(note);
+        document.close();
+        return out.toByteArray();
+    }
+
+    private void addReceiptRow(PdfPTable table, String label, String value, Font labelFont, Font valueFont) {
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
+        PdfPCell valueCell = new PdfPCell(new Phrase(value == null || value.isBlank() ? "—" : value, valueFont));
+        for (PdfPCell cell : new PdfPCell[]{labelCell, valueCell}) {
+            cell.setPadding(8);
+            cell.setBorderColor(new Color(226, 232, 240));
+        }
+        labelCell.setBackgroundColor(new Color(248, 250, 252));
+        table.addCell(labelCell);
+        table.addCell(valueCell);
+    }
+
+    private String safePdfText(String value) {
+        return value == null ? "" : value;
     }
 
     private void addTotalRow(PdfPTable table, String label, String value, Font font) {

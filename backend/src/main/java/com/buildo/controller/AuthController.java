@@ -205,6 +205,46 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Enter a valid email address."));
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("success", true);
+        response.put("message", "If an account is registered with that email, a verification code will be sent.");
+        try {
+            String devOtp = otpService.requestPasswordReset(email);
+            if (devOtp != null) {
+                response.put("devOtp", devOtp);
+            }
+        } catch (ResponseStatusException ex) {
+            // Keep account lookup and SMTP failures from exposing whether an address is registered.
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+        if (email == null || email.isBlank() || otp == null || otp.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email and verification code are required."));
+        }
+
+        try {
+            otpService.verifyPasswordReset(email, otp);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Email verified. A new generated password has been sent to your inbox."));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(Map.of(
+                    "error", ex.getReason() != null ? ex.getReason() : "Could not reset the password."));
+        }
+    }
+
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) {
