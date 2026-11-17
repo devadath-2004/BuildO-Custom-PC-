@@ -103,17 +103,6 @@ export default function CheckoutPage() {
     setActivePaymentOrder(null);
     clearCart();
 
-    if (paymentResponse.demoPayment) {
-      showNotification(
-        paymentResponse.verificationReceiptEmailSent
-          ? 'Demo order marked PAID. The ₹1 test receipt PDF was emailed; the full build amount was not charged.'
-          : 'Demo order marked PAID, but the ₹1 test receipt email failed. Check the backend SMTP settings.',
-        paymentResponse.verificationReceiptEmailSent ? 'success' : 'info'
-      );
-      setActivePage('orders');
-      return;
-    }
-
     try {
       const [refreshedOrder, invoiceData] = await Promise.all([
         apiClient.getOrderById(paymentResponse.orderId),

@@ -1,6 +1,7 @@
 package com.buildo.service;
 
 import com.buildo.dto.RegisterRequest;
+import com.buildo.model.Invoice;
 import com.buildo.model.Order;
 import com.buildo.model.User;
 import com.buildo.repository.UserRepository;
@@ -38,6 +39,7 @@ public class OtpService {
     private final String username;
     private final String password;
     private final String fromEmail;
+    private final String fromName;
     private final boolean developmentFallback;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -50,6 +52,7 @@ public class OtpService {
             @Value("${spring.mail.username:}") String username,
             @Value("${spring.mail.password:}") String password,
             @Value("${spring.mail.from:${spring.mail.username:}}") String fromEmail,
+            @Value("${spring.mail.from-name:BuildO}") String fromName,
             @Value("${buildo.otp.development-fallback:false}") boolean developmentFallback,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder) {
@@ -58,6 +61,7 @@ public class OtpService {
         this.username = username;
         this.password = password;
         this.fromEmail = fromEmail;
+        this.fromName = fromName;
         this.developmentFallback = developmentFallback;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -205,31 +209,30 @@ public class OtpService {
         pendingPasswordResetMap.remove(normalizedEmail);
     }
 
-    /** Sends a receipt for the ₹1 test-mode verification charge (not for the full PC order). */
-    public boolean sendVerificationReceipt(Order order, String paymentId, byte[] receiptPdf) {
+    /** Sends the BuildO order confirmation with the invoice generated for the educational checkout. */
+    public boolean sendPaymentReceipt(Order order, Invoice invoice, byte[] invoicePdf) {
         String toEmail = order.getCustomerEmail();
         if (!hasText(toEmail) || !isSmtpConfigured()) {
-            logger.warn("₹1 verification receipt was not sent because the recipient or SMTP settings are missing.");
+            logger.warn("Payment confirmation was not sent because the recipient or SMTP settings are missing.");
             return false;
         }
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "BuildO PC Builder");
+            helper.setFrom(fromEmail, fromName);
             helper.setTo(toEmail);
-            helper.setSubject("Your BuildO demo payment receipt (₹1 test payment)");
-            helper.setText(getVerificationReceiptTemplate(
-                    order.getCustomerName(), order.getOrderNumber(), paymentId,
-                    order.getFinalAmount() == null ? "0.00" : order.getFinalAmount().toPlainString(),
-                    order.getRazorpayVerificationRefundStatus(), order.getRazorpayVerificationRefundId()), true);
-            helper.addAttachment("BuildO-Demo-Receipt-" + safeAttachmentName(order.getOrderNumber()) + ".pdf",
-                    new ByteArrayResource(receiptPdf));
+            helper.setSubject("Your BuildO order confirmation and invoice (Razorpay test mode)");
+            helper.setText(getPaymentConfirmationTemplate(
+                    order.getCustomerName(), order.getOrderNumber(), invoice.getInvoiceNumber(),
+                    order.getFinalAmount() == null ? "0.00" : order.getFinalAmount().toPlainString()), true);
+            helper.addAttachment("BuildO-Invoice-" + safeAttachmentName(invoice.getInvoiceNumber()) + ".pdf",
+                    new ByteArrayResource(invoicePdf));
             mailSender.send(message);
-            logger.info("₹1 test receipt PDF sent for BuildO order {}", order.getOrderNumber());
+            logger.info("Invoice PDF emailed for BuildO order {}", order.getOrderNumber());
             return true;
         } catch (Exception ex) {
-            logger.error("Could not send ₹1 verification receipt for BuildO order {}", order.getOrderNumber(), ex);
+            logger.error("Could not send invoice PDF for BuildO order {}", order.getOrderNumber(), ex);
             return false;
         }
     }
@@ -266,7 +269,7 @@ public class OtpService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "BuildO PC Builder");
+            helper.setFrom(fromEmail, fromName);
             helper.setTo(toEmail);
             helper.setSubject("Your BuildO password reset code");
             helper.setText(getPasswordResetOtpTemplate(otp), true);
@@ -290,7 +293,7 @@ public class OtpService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "BuildO PC Builder");
+            helper.setFrom(fromEmail, fromName);
             helper.setTo(toEmail);
             helper.setSubject("Your temporary BuildO password");
             helper.setText(getTemporaryPasswordTemplate(temporaryPassword), true);
@@ -329,33 +332,25 @@ public class OtpService {
             """.formatted(temporaryPassword);
     }
 
-    private String getVerificationReceiptTemplate(String customerName, String orderNumber, String paymentId,
-                                                  String buildTotal, String refundStatus, String refundId) {
+    private String getPaymentConfirmationTemplate(String customerName, String orderNumber,
+                                                  String invoiceNumber, String buildTotal) {
         String safeName = escapeHtml(hasText(customerName) ? customerName : "BuildO customer");
         String safeOrderNumber = escapeHtml(orderNumber);
-        String safePaymentId = escapeHtml(paymentId);
+        String safeInvoiceNumber = escapeHtml(invoiceNumber);
         String safeBuildTotal = escapeHtml(buildTotal);
-        String safeRefundStatus = escapeHtml(hasText(refundStatus) ? refundStatus.replace('_', ' ') : "Not available");
-        String safeRefundId = escapeHtml(refundId);
-        String refundDetails = hasText(refundId)
-                ? "<p style=\"margin:6px 0;color:#c9cbbd\"><strong>Refund reference:</strong> " + safeRefundId + "</p>"
-                : "";
 
         return """
             <div style="font-family:Arial,sans-serif;background:#10110d;color:#f5f6ef;padding:32px;border-radius:16px;max-width:560px;margin:auto">
-              <h2 style="color:#d8ff43;margin:0 0 8px">BuildO payment verification receipt</h2>
-              <p style="font-size:14px;color:#c9cbbd;line-height:1.6">Hello %s, Razorpay verified the ₹1.00 test-mode payment for your BuildO checkout.</p>
+              <h2 style="color:#d8ff43;margin:0 0 8px">Your BuildO order is confirmed</h2>
+              <p style="font-size:14px;color:#c9cbbd;line-height:1.6">Hello %s, your BuildO order has been recorded as paid and is ready for order tracking.</p>
               <div style="background:#191b14;border:1px solid #3d4820;border-radius:12px;padding:18px;margin:20px 0">
-                <p style="margin:6px 0;color:#c9cbbd"><strong>Verification amount:</strong> ₹1.00 INR</p>
-                <p style="margin:6px 0;color:#c9cbbd"><strong>Build total (reference only):</strong> ₹%s INR — not charged</p>
-                <p style="margin:6px 0;color:#c9cbbd"><strong>BuildO order reference:</strong> %s</p>
-                <p style="margin:6px 0;color:#c9cbbd"><strong>Razorpay payment ID:</strong> %s</p>
-                <p style="margin:6px 0;color:#c9cbbd"><strong>Refund status:</strong> %s</p>
-                %s
+                <p style="margin:6px 0;color:#c9cbbd"><strong>Order:</strong> %s</p>
+                <p style="margin:6px 0;color:#c9cbbd"><strong>Invoice:</strong> %s</p>
+                <p style="margin:6px 0;color:#c9cbbd"><strong>Build total recorded by BuildO:</strong> INR %s</p>
               </div>
-              <p style="font-size:12px;color:#a6a895;line-height:1.6"><strong>DEMO / TEST MODE:</strong> BuildO marks this order paid only for local demo flow. Only the ₹1 test payment was verified; the full build amount above was not collected. This is not a tax invoice or proof of full payment, and the order must not be fulfilled. Razorpay test mode does not move real money.</p>
+              <p style="font-size:12px;color:#a6a895;line-height:1.6">Razorpay is configured in test mode for this educational project. The payment gateway does not transfer real money; BuildO records the checkout as paid so the invoice and order tracking flow can be demonstrated.</p>
             </div>
-            """.formatted(safeName, safeBuildTotal, safeOrderNumber, safePaymentId, safeRefundStatus, refundDetails);
+            """.formatted(safeName, safeOrderNumber, safeInvoiceNumber, safeBuildTotal);
     }
 
     private String escapeHtml(String value) {
@@ -403,7 +398,7 @@ public class OtpService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, "BuildO PC Builder");
+            helper.setFrom(fromEmail, fromName);
             helper.setTo(toEmail);
             helper.setSubject("Your BuildO account verification code");
             helper.setText(getHtmlOtpTemplate(recipient, otp), true);

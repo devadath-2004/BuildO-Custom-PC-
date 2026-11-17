@@ -149,12 +149,6 @@ public class OrderService {
     public Order updateOrderStatus(Long orderId, OrderStatus status, String trackingNumber) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + orderId));
-        if (order.isRazorpayVerificationTestPaid()
-                && status != OrderStatus.CANCELLED
-                && status != OrderStatus.CONFIRMED) {
-            throw new IllegalArgumentException(
-                    "This order was marked paid by a Razorpay test payment and cannot be fulfilled.");
-        }
         order.setStatus(status);
         if (trackingNumber != null && !trackingNumber.isBlank()) {
             order.setTrackingNumber(trackingNumber);

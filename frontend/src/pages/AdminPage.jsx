@@ -925,7 +925,7 @@ export default function AdminPage() {
                               <td className="p-3.5">
                                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/40 whitespace-nowrap">
                                   {o.razorpayVerificationTestPaid
-                                    ? 'Razorpay TEST • PAID (DEMO)'
+                                    ? 'Razorpay TEST • PAID'
                                     : `${o.paymentMethod || 'Razorpay'} • ${o.paymentStatus}`}
                                 </span>
                               </td>
@@ -935,7 +935,6 @@ export default function AdminPage() {
                                 <select
                                   value={o.status}
                                   onChange={e => handleUpdateStatus(o.id, e.target.value, o.trackingNumber)}
-                                  disabled={o.razorpayVerificationTestPaid}
                                   className={`border rounded-lg text-xs font-semibold px-2.5 py-1.5 focus:outline-none cursor-pointer transition-all ${
                                     o.status === 'CONFIRMED'
                                       ? 'bg-blue-950/80 border-blue-600/60 text-blue-300'
@@ -954,11 +953,6 @@ export default function AdminPage() {
                                   <option value="DELIVERED">DELIVERED</option>
                                   <option value="CANCELLED">CANCELLED</option>
                                 </select>
-                                {o.razorpayVerificationTestPaid && (
-                                  <span className="mt-1 block max-w-36 text-[10px] leading-relaxed text-amber-300">
-                                    Demo only · fulfillment disabled
-                                  </span>
-                                )}
                               </td>
 
                               {/* Real-Time Tracking Number Updating */}
@@ -990,13 +984,25 @@ export default function AdminPage() {
                                   >
                                     {isExpanded ? 'Hide' : 'Details'}
                                   </button>
-                                  <button
-                                    onClick={() => setSelectedOrderForInvoice(o)}
-                                    className="p-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-400 border border-cyan-800/40 transition-colors"
-                                    title="View & Download Tax Invoice"
-                                  >
-                                    <FileText className="w-4 h-4" />
-                                  </button>
+                                  {o.paymentStatus === 'PAID' ? (
+                                    <button
+                                      onClick={() => setSelectedOrderForInvoice(o)}
+                                      className="p-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900/80 text-cyan-400 border border-cyan-800/40 transition-colors"
+                                      title="View & Download Tax Invoice"
+                                    >
+                                      <FileText className="w-4 h-4" />
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      disabled
+                                      className="p-1.5 rounded-lg bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"
+                                      title="An official invoice is available after full payment is confirmed"
+                                      aria-label="Invoice available after payment"
+                                    >
+                                      <FileText className="w-4 h-4" />
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>

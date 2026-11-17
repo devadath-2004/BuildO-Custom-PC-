@@ -77,7 +77,7 @@ const getPresetPresentation = preset => ({
 });
 
 export default function PresetsPage() {
-  const { loadPresetIntoConfigurator, addToCart, showNotification } = useApp();
+  const { requireSignIn, loadPresetIntoConfigurator, addToCart } = useApp();
   const [presets, setPresets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('ALL');
@@ -113,6 +113,7 @@ export default function PresetsPage() {
   });
 
   const handleQuickBuy = (preset) => {
+    if (!requireSignIn('presets')) return;
     const presentation = getPresetPresentation(preset);
     addToCart({
       id: `preset-${preset.id}-${Date.now()}`,
@@ -123,6 +124,11 @@ export default function PresetsPage() {
       imageUrl: preset.imageUrl,
       quantity: 1
     });
+  };
+
+  const handleCustomize = (preset) => {
+    if (!requireSignIn('presets')) return;
+    loadPresetIntoConfigurator(preset);
   };
 
   return (
@@ -320,7 +326,7 @@ export default function PresetsPage() {
                     <div className="flex items-center gap-2.5">
                       {/* Customize button: loads into configurator */}
                       <button
-                        onClick={() => loadPresetIntoConfigurator(preset)}
+                        onClick={() => handleCustomize(preset)}
                         className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700 text-xs font-bold transition-all"
                         title="Customize this preset component-by-component"
                       >

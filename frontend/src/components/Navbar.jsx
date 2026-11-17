@@ -4,14 +4,14 @@ import { LogOut, Home, Wrench, Shield, Layers, Package, ShoppingCart, Menu, X, A
 import BuildOWordmark from './BuildOWordmark';
 
 export default function Navbar() {
-  const { activePage, setActivePage, user, logout, cart } = useApp();
+  const { activePage, navigateToPage, user, logout, cart } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const totalCartCount = cart?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
   const isAdmin = user?.role === 'ROLE_ADMIN';
 
   const navigate = (page) => {
     setMenuOpen(false);
-    setActivePage(page);
+    navigateToPage(page);
   };
 
   const links = [
@@ -82,15 +82,33 @@ export default function Navbar() {
                 <span className="truncate text-xs font-semibold text-white">{user.fullName || user.username}</span>
                 <span className="text-[10px] text-white/40">{isAdmin ? 'Admin' : 'Customer'}</span>
               </div>
-              <button type="button" onClick={logout} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/55 transition hover:border-rose-400/30 hover:text-rose-300" title="Sign out" aria-label="Sign out">
-                <LogOut className="h-4 w-4" />
-              </button>
             </div>
           )}
 
-          <button type="button" onClick={() => navigate('configurator')} className="hidden min-h-11 items-center gap-2 rounded-full bg-[#d8ff43] px-5 text-[13px] font-bold text-[#171910] transition hover:bg-[#cafa25] lg:inline-flex">
-            Start a build <ArrowRight className="h-4 w-4" />
-          </button>
+          {!user && (
+            <button
+              type="button"
+              onClick={() => navigate('login')}
+              className="hidden rounded-full border border-[#d8ff43]/40 px-4 py-2 text-[13px] font-semibold text-[#d8ff43] transition hover:bg-[#d8ff43]/10 sm:inline-flex"
+            >
+              Sign in
+            </button>
+          )}
+
+          {user ? (
+            <button
+              type="button"
+              onClick={logout}
+              className="hidden h-9 items-center gap-1.5 rounded-full border border-white/15 px-3 text-xs font-semibold text-white/70 transition hover:border-rose-400/40 hover:text-rose-300 lg:inline-flex"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Log out
+            </button>
+          ) : (
+            <button type="button" onClick={() => navigate('configurator')} className="hidden min-h-11 items-center gap-2 rounded-full bg-[#d8ff43] px-5 text-[13px] font-bold text-[#171910] transition hover:bg-[#cafa25] lg:inline-flex">
+              Start a build <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
 
           <button
             type="button"
@@ -116,9 +134,15 @@ export default function Navbar() {
                 </button>
               );
             })}
+            {!user && <button type="button" onClick={() => navigate('login')} className="flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-[#d8ff43] transition hover:bg-white/[0.05] sm:col-span-2">Sign in</button>}
             {!isAdmin && <button type="button" onClick={() => navigate('cart')} className="flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/70 transition hover:bg-white/[0.05] hover:text-white sm:hidden"><ShoppingCart className="h-4 w-4" />Cart {totalCartCount ? `(${totalCartCount})` : ''}</button>}
-            <button type="button" onClick={() => navigate('configurator')} className="mt-2 inline-flex items-center justify-between rounded-xl bg-[#d8ff43] px-4 py-3 text-sm font-bold text-[#171910] transition hover:bg-[#cafa25] sm:col-span-2 xl:hidden">Start a build<ArrowRight className="h-4 w-4" /></button>
-            {user && <button type="button" onClick={() => { setMenuOpen(false); logout(); }} className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-left text-sm text-white/50 transition hover:bg-white/[0.05] hover:text-white sm:col-span-2 xl:hidden"><LogOut className="h-4 w-4" />Sign out of {user.fullName || user.username}</button>}
+            {user ? (
+              <button type="button" onClick={() => { setMenuOpen(false); logout(); }} className="mt-2 inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-left text-sm text-white/65 transition hover:border-rose-400/30 hover:bg-white/[0.05] hover:text-rose-300 sm:col-span-2 xl:hidden">
+                <LogOut className="h-4 w-4" />Log out
+              </button>
+            ) : (
+              <button type="button" onClick={() => navigate('configurator')} className="mt-2 inline-flex items-center justify-between rounded-xl bg-[#d8ff43] px-4 py-3 text-sm font-bold text-[#171910] transition hover:bg-[#cafa25] sm:col-span-2 xl:hidden">Start a build<ArrowRight className="h-4 w-4" /></button>
+            )}
           </div>
         </nav>
       )}

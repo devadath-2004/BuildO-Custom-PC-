@@ -51,8 +51,8 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
       } else if (result.paymentStatus === 'PAID' && result.demoPayment) {
         showNotification(
           result.verificationReceiptEmailSent
-            ? '₹1 test verified. Order marked paid in demo mode; PDF receipt emailed.'
-            : '₹1 test verified. Order marked paid in demo mode, but the receipt email failed.',
+            ? '₹1 test gateway verified. BuildO recorded the order as paid and emailed the invoice.'
+            : '₹1 test gateway verified. BuildO recorded the order as paid; the invoice email failed.',
           result.verificationReceiptEmailSent ? 'success' : 'info'
         );
         onSuccess(result);
@@ -146,7 +146,7 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
             </div>
             {verificationMode && (
               <div className="text-[11px] font-semibold text-slate-400 mt-1">
-                Build total: ₹{Number(order.finalAmount).toLocaleString('en-IN')} (not charged)
+                Build total recorded in BuildO: ₹{Number(order.finalAmount).toLocaleString('en-IN')}
               </div>
             )}
           </div>
@@ -159,7 +159,7 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
               <div className="space-y-1">
                 <strong className="block text-sm">Razorpay test payment verified</strong>
                 <span className="block">{verificationResult.message}</span>
-                <span className="block text-emerald-300/80">A ₹1 test payment marks the order paid only in demo mode. The full build total is not charged or eligible for fulfillment.</span>
+                <span className="block text-emerald-300/80">BuildO records the configured order total as paid so its invoice and order tracking workflow can be used. Razorpay test mode validates only the ₹1 payment and transfers no real funds.</span>
               </div>
             </div>
           )}
@@ -224,7 +224,7 @@ export default function PaymentGatewayModal({ order, onSuccess, onClose }) {
               {verificationMode
                 ? showPersonalQr
                   ? 'This payment goes directly to the personal UPI account shown above. It is separate from Razorpay Test Mode and needs manual payment confirmation and refund.'
-                  : 'Razorpay Checkout uses simulated test-mode ₹1 verification, then marks the order paid for the demo flow. The full order total is not charged, and fulfillment stays disabled.'
+                  : 'Razorpay Test Mode validates ₹1. After verification, BuildO records the configured order total as paid and continues through invoice and order tracking. Test mode does not transfer real funds.'
                 : 'Choose an available payment method in Razorpay’s secure checkout. BuildO never receives or stores your card number or CVV.'}
             </p>
             <div className="flex items-center gap-2 text-[11px] text-slate-500">

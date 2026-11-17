@@ -6,10 +6,13 @@ import com.buildo.model.PaymentStatus;
 import com.buildo.repository.InvoiceRepository;
 import com.buildo.service.InvoicePdfService;
 import com.buildo.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -17,6 +20,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/invoices")
 public class InvoiceController {
+
+    private static final Logger log = LoggerFactory.getLogger(InvoiceController.class);
 
     private final InvoiceRepository invoiceRepository;
     private final OrderService orderService;
@@ -31,6 +36,7 @@ public class InvoiceController {
     }
 
     @GetMapping("/order/{orderId}")
+    @Transactional
     public ResponseEntity<?> getInvoiceByOrderId(@PathVariable Long orderId,
                                                   Authentication authentication) {
         Optional<Order> orderOpt = authorizedPaidOrder(orderId, authentication);
@@ -45,6 +51,7 @@ public class InvoiceController {
     }
 
     @GetMapping("/{orderId}/download")
+    @Transactional
     public ResponseEntity<byte[]> downloadInvoicePdf(@PathVariable Long orderId,
                                                      Authentication authentication) {
         try {
@@ -60,11 +67,13 @@ public class InvoiceController {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData(
-                    "attachment", "BuildO-Invoice-" + invoice.getInvoiceNumber() + ".pdf");
+            headers.setContentDisposition(org.springframework.http.ContentDisposition.attachment()
+                    .filename("BuildO-Invoice-" + invoice.getInvoiceNumber() + ".pdf")
+                    .build());
             headers.setContentLength(pdfBytes.length);
             return ResponseEntity.ok().headers(headers).body(pdfBytes);
         } catch (Exception e) {
+            log.error("Failed to generate official invoice PDF for order {}", orderId, e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -73,8 +82,7 @@ public class InvoiceController {
         boolean admin = authentication.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         return orderService.getOrderByIdForUser(orderId, authentication.getName(), admin)
-                .filter(order -> order.getPaymentStatus() == PaymentStatus.PAID
-                        && !order.isRazorpayVerificationTestPaid());
+                .filter(order -> order.getPaymentStatus() == PaymentStatus.PAID);
     }
 
     private Invoice createInvoice(Order order) {

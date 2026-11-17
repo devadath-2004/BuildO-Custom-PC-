@@ -364,22 +364,29 @@ public class PaymentService {
         order.setRazorpayVerificationTestPaid(true);
         orderRepository.save(order);
 
+        Invoice invoice = invoiceRepository.findByOrderId(order.getId())
+                .orElseGet(() -> new Invoice(order,
+                        "INV-" + order.getOrderNumber().replace("BO-", "")));
+        invoice.setTransactionId(paymentId);
+        invoice.setPaymentMethod(order.getPaymentMethod());
+        invoice = invoiceRepository.save(invoice);
+
         if (!order.isRazorpayVerificationReceiptEmailSent()) {
             try {
-                byte[] receiptPdf = invoicePdfService.generateVerificationReceiptPdf(order, paymentId);
-                boolean sent = otpService.sendVerificationReceipt(order, paymentId, receiptPdf);
+                byte[] invoicePdf = invoicePdfService.generateInvoicePdf(invoice);
+                boolean sent = otpService.sendPaymentReceipt(order, invoice, invoicePdf);
                 if (sent) {
                     order.setRazorpayVerificationReceiptEmailSent(true);
                     orderRepository.save(order);
                 }
             } catch (Exception ex) {
-                logger.error("Could not create the Razorpay test receipt PDF for order {}", order.getOrderNumber(), ex);
+                logger.error("Could not create or email the invoice PDF for order {}", order.getOrderNumber(), ex);
             }
         }
 
         String receiptMessage = order.isRazorpayVerificationReceiptEmailSent()
-                ? " The order is marked PAID in test/demo mode, and the PDF receipt was emailed. The full build amount was not charged."
-                : " The order is marked PAID in test/demo mode, but its PDF receipt could not be emailed. Check SMTP settings and the backend log. The full build amount was not charged.";
+                ? " The order is recorded as PAID for the BuildO checkout and its invoice PDF was emailed. The Razorpay gateway is in test mode."
+                : " The order is recorded as PAID for the BuildO checkout, but its invoice PDF could not be emailed. Check SMTP settings and the backend log. The Razorpay gateway is in test mode.";
         return new PaymentVerificationResponse(order.getId(), order.getOrderNumber(), "PAID", null,
                 order.getFinalAmount(), message + receiptMessage,
                 order.isRazorpayVerificationReceiptEmailSent(), true);

@@ -16,6 +16,13 @@ export const CATEGORIES = [
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [postAuthPage, setPostAuthPageState] = useState(() => {
+    try {
+      return sessionStorage.getItem('buildo_post_auth_page') || null;
+    } catch {
+      return null;
+    }
+  });
 
   const getPageFromHash = () => {
     try {
@@ -41,6 +48,58 @@ export function AppProvider({ children }) {
       // ignore
     }
   };
+
+  const setPostAuthPage = (page) => {
+    setPostAuthPageState(page || null);
+    try {
+      if (page) sessionStorage.setItem('buildo_post_auth_page', page);
+      else sessionStorage.removeItem('buildo_post_auth_page');
+    } catch {
+      // The redirect still works for the current page if session storage is unavailable.
+    }
+  };
+
+  const requireSignIn = (returnPage = 'home') => {
+    if (user) return true;
+    setPostAuthPage(returnPage);
+    setActivePage('login');
+    return false;
+  };
+
+  const navigateToPage = (page) => {
+    const authRequiredPages = ['configurator', 'build', 'cart', 'checkout', 'orders', 'admin'];
+    if (!user && authRequiredPages.includes(page)) {
+      requireSignIn(page);
+      return;
+    }
+    if (page === 'home' || page === 'presets' || page === 'login') {
+      setPostAuthPage(null);
+    }
+    setActivePage(page);
+  };
+
+  const completeAuthentication = (authenticatedUser) => {
+    setUser(authenticatedUser);
+    const pageFromRoute = activePage !== 'login' ? activePage : null;
+    let destination = postAuthPage || pageFromRoute || (authenticatedUser.role === 'ROLE_ADMIN' ? 'admin' : 'home');
+    if (authenticatedUser.role === 'ROLE_ADMIN' && destination === 'orders') {
+      window.__adminInitialTab = 'orders';
+      destination = 'admin';
+    }
+    setPostAuthPage(null);
+    setActivePage(destination);
+  };
+
+  useEffect(() => {
+    if (!user || !postAuthPage) return;
+    let destination = postAuthPage;
+    if (user.role === 'ROLE_ADMIN' && destination === 'orders') {
+      window.__adminInitialTab = 'orders';
+      destination = 'admin';
+    }
+    setPostAuthPage(null);
+    setActivePage(destination);
+  }, [user, postAuthPage]);
 
   useEffect(() => {
     const onHashChange = () => {
@@ -146,6 +205,7 @@ export function AppProvider({ children }) {
   const logout = () => {
     apiClient.setToken(null);
     setUser(null);
+    setPostAuthPage(null);
     setActivePage('home');
     showNotification('You have been signed out.', 'info');
   };
@@ -158,6 +218,11 @@ export function AppProvider({ children }) {
         logout,
         activePage,
         setActivePage,
+        navigateToPage,
+        requireSignIn,
+        postAuthPage,
+        setPostAuthPage,
+        completeAuthentication,
         customBuild,
         setCustomBuild,
         addBuildComponent,

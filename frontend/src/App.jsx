@@ -107,7 +107,7 @@ export default function App() {
   );
 
   // Keep protected app pages behind authentication, but let visitors see the landing page.
-  if (!user && activePage !== 'home') {
+  if (!user && !['home', 'presets'].includes(activePage)) {
     return (
       <div className="min-h-screen text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950">
         {toastBanner}

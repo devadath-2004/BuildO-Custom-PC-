@@ -49,7 +49,7 @@ const BUILD_PATHS = [
     imageLabel: 'Customize a PC component by component',
     imageCaption: 'Every part, your call',
     cta: 'Open custom builder',
-    onChoose: ({ setActivePage }) => setActivePage('configurator'),
+    onChoose: ({ navigateTo }) => navigateTo('configurator'),
     features: ['Socket and power checks', 'Live price updates', 'Swap parts whenever you like'],
   },
   {
@@ -62,7 +62,7 @@ const BUILD_PATHS = [
     imageLabel: 'A balanced gaming PC ready to customize',
     imageCaption: 'A balanced build to start from',
     cta: 'Get my recommendation',
-    onChoose: ({ setActivePage }) => setActivePage('presets'),
+    onChoose: ({ navigateTo }) => navigateTo('presets'),
     features: ['Curated preset builds', 'See the included components', 'Customize in the builder'],
   },
 ];
@@ -148,7 +148,7 @@ function PresetCard({ preset, index, onLoad }) {
 }
 
 export default function HomePage() {
-  const { user, cart, logout, setActivePage, loadPresetIntoConfigurator } = useApp();
+  const { user, cart, logout, navigateToPage, requireSignIn, loadPresetIntoConfigurator } = useApp();
   const [presets, setPresets] = useState([]);
   const [componentCount, setComponentCount] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -220,22 +220,29 @@ export default function HomePage() {
 
   const navigateTo = (page) => {
     setMenuOpen(false);
-    setActivePage(page);
+    navigateToPage(page);
   };
 
   const loadPreset = (preset) => {
+    if (!requireSignIn('presets')) return;
     loadPresetIntoConfigurator(preset);
   };
 
   const menuLinks = [
-    { label: 'How it works', action: () => scrollTo('how') },
-    { label: 'Build paths', action: () => scrollTo('paths') },
-    { label: 'Popular builds', action: () => scrollTo('builds') },
-    {
-      label: !user ? 'Sign in' : user.role === 'ROLE_ADMIN' ? 'Admin portal' : 'My orders',
-      action: () => navigateTo(!user ? 'login' : user.role === 'ROLE_ADMIN' ? 'admin' : 'orders'),
-    },
-    ...(user ? [{ label: 'Cart', action: () => navigateTo('cart'), count: cartCount }] : []),
+    { label: 'Home', action: () => scrollTo('top') },
+    { label: 'Build PC', action: () => navigateTo('configurator') },
+    { label: 'Presets', action: () => navigateTo('presets') },
+    ...(user ? [{
+      label: 'Orders',
+      action: () => {
+        if (user?.role === 'ROLE_ADMIN') {
+          window.__adminInitialTab = 'orders';
+          navigateTo('admin');
+        } else {
+          navigateTo('orders');
+        }
+      },
+    }] : []),
   ];
 
   return (
@@ -251,15 +258,13 @@ export default function HomePage() {
             <BuildOWordmark size="nav" />
           </button>
 
-          <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex">
-            {menuLinks.filter((link) => link.label !== 'Cart').map((link) => (
+          <nav aria-label="Main navigation" className="hidden min-w-0 flex-1 items-center justify-evenly gap-2 px-6 lg:flex xl:px-10">
+            {menuLinks.map((link) => (
               <button
                 type="button"
                 key={link.label}
                 onClick={link.action}
-                className={link.label === 'Sign in'
-                  ? 'inline-flex items-center rounded-full border border-[#d8ff43]/40 bg-[#d8ff43]/10 px-4 py-2 text-[13px] font-semibold text-[#d8ff43] shadow-[inset_0_0_18px_rgba(216,255,67,0.06)] transition hover:border-[#d8ff43]/75 hover:bg-[#d8ff43]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8ff43] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10110d]'
-                  : 'text-[13px] font-medium text-white/65 transition hover:text-[#d8ff43]'}
+                className="text-[13px] font-medium text-white/65 transition hover:text-[#d8ff43]"
               >
                 {link.label}
               </button>
@@ -282,13 +287,24 @@ export default function HomePage() {
                 )}
               </button>
             )}
-            <button
-              type="button"
-              onClick={() => navigateTo('configurator')}
-              className="hidden min-h-11 items-center gap-3 rounded-full bg-[#d8ff43] px-5 text-[13px] font-bold text-[#171910] transition hover:bg-[#cafa25] lg:inline-flex"
-            >
-              Start a build <ArrowRight className="h-4 w-4" />
-            </button>
+            {user ? (
+              <button
+                type="button"
+                onClick={logout}
+                className="hidden h-9 items-center gap-1.5 rounded-full border border-white/15 px-3 text-xs font-semibold text-white/70 transition hover:border-rose-400/40 hover:text-rose-300 lg:inline-flex"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Log out
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigateTo('configurator')}
+                className="hidden min-h-11 items-center gap-3 rounded-full bg-[#d8ff43] px-5 text-[13px] font-bold text-[#171910] transition hover:bg-[#cafa25] lg:inline-flex"
+              >
+                Start a build <ArrowRight className="h-4 w-4" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
@@ -316,22 +332,23 @@ export default function HomePage() {
                   {link.count > 0 && <span className="rounded-full bg-[#d8ff43] px-2 py-0.5 text-xs font-bold text-[#171910]">{link.count}</span>}
                 </button>
               ))}
-              <button
-                type="button"
-                onClick={() => navigateTo('configurator')}
-                className="mt-2 inline-flex items-center justify-between rounded-xl bg-[#d8ff43] px-4 py-3 text-sm font-bold text-[#171910] transition hover:bg-[#cafa25] sm:col-span-2 lg:col-span-1"
-              >
-                <span>Start a build</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              {user && (
+              {user ? (
                 <button
                   type="button"
                   onClick={() => { setMenuOpen(false); logout(); }}
-                  className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-left text-sm text-white/55 transition hover:bg-white/5 hover:text-white"
+                  className="mt-2 inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-left text-sm text-white/65 transition hover:border-rose-400/30 hover:bg-white/5 hover:text-rose-300 sm:col-span-2 lg:col-span-1"
                 >
                   <LogOut className="h-4 w-4" />
-                  Sign out of {user.fullName || user.username}
+                  Log out
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigateTo('configurator')}
+                  className="mt-2 inline-flex items-center justify-between rounded-xl bg-[#d8ff43] px-4 py-3 text-sm font-bold text-[#171910] transition hover:bg-[#cafa25] sm:col-span-2 lg:col-span-1"
+                >
+                  <span>Start a build</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               )}
             </div>
@@ -366,10 +383,10 @@ export default function HomePage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => scrollTo('how')}
+                  onClick={() => navigateTo('presets')}
                   className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/15 px-7 text-sm font-semibold text-white transition hover:border-white/40 hover:bg-white/5"
                 >
-                  See how it works
+                  Browse preset builds
                 </button>
               </div>
 
@@ -500,7 +517,7 @@ export default function HomePage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => path.onChoose({ setActivePage })}
+                      onClick={() => path.onChoose({ navigateTo })}
                       className={`relative mt-6 inline-flex min-h-14 items-center justify-between rounded-full px-6 text-sm font-bold transition focus:outline-none focus:ring-2 focus:ring-[#d8ff43] focus:ring-offset-2 ${index === 0 ? 'border border-white/20 text-white hover:border-[#d8ff43]/70 hover:text-[#d8ff43] focus:ring-offset-[#151711]' : 'bg-[#10110d] text-white hover:bg-[#202219] focus:ring-offset-[#d8ff43]'}`}
                     >
                       {path.cta}<ArrowRight className="h-4 w-4" />
@@ -580,10 +597,13 @@ export default function HomePage() {
           </button>
           <p className="max-w-sm text-xs leading-5 text-white/45">PC recommendations for people who care about the experience, not the spec-sheet headache.</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/50">
-            <button type="button" onClick={() => scrollTo('how')} className="transition hover:text-[#d8ff43]">How it works</button>
+            <button type="button" onClick={() => scrollTo('top')} className="transition hover:text-[#d8ff43]">Home</button>
+            <button type="button" onClick={() => navigateTo('configurator')} className="transition hover:text-[#d8ff43]">Build PC</button>
             <button type="button" onClick={() => navigateTo('presets')} className="transition hover:text-[#d8ff43]">Presets</button>
-            {user && <button type="button" onClick={() => navigateTo(user?.role === 'ROLE_ADMIN' ? 'admin' : 'orders')} className="transition hover:text-[#d8ff43]">Orders</button>}
-            {!user && <button type="button" onClick={() => navigateTo('login')} className="transition hover:text-[#d8ff43]">Sign in</button>}
+            {user && <button type="button" onClick={() => {
+              if (user.role === 'ROLE_ADMIN') window.__adminInitialTab = 'orders';
+              navigateTo(user.role === 'ROLE_ADMIN' ? 'admin' : 'orders');
+            }} className="transition hover:text-[#d8ff43]">Orders</button>}
             <span>© 2026 BuildO</span>
           </div>
         </div>

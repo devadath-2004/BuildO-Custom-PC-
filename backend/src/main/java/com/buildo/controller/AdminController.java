@@ -137,7 +137,7 @@ public class AdminController {
         }
 
         for (Order order : orders) {
-            if (order.getPaymentStatus() == PaymentStatus.PAID && !order.isRazorpayVerificationTestPaid()) {
+            if (order.getPaymentStatus() == PaymentStatus.PAID) {
                 totalRevenue = totalRevenue.add(order.getFinalAmount());
             }
             statusCounts.put(order.getStatus(), statusCounts.getOrDefault(order.getStatus(), 0L) + 1);

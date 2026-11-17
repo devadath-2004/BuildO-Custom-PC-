@@ -16,7 +16,7 @@ function FieldLabel({ children, className = '' }) {
 }
 
 export default function LoginPage() {
-  const { setUser, setActivePage, showNotification } = useApp();
+  const { completeAuthentication, navigateToPage, showNotification } = useApp();
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState('form');
   const [loading, setLoading] = useState(false);
@@ -95,9 +95,8 @@ export default function LoginPage() {
       if (isLogin) {
         const response = await apiClient.login({ usernameOrEmail: username, password });
         apiClient.setToken(response.token);
-        setUser(response);
+        completeAuthentication(response);
         showNotification(`Welcome back, ${response.fullName || response.username}!`, 'success');
-        setActivePage(response.role === 'ROLE_ADMIN' ? 'admin' : 'home');
         return;
       }
 
@@ -122,9 +121,8 @@ export default function LoginPage() {
       }
       const response = await apiClient.verifyOtp({ email, otp: otp.trim() });
       apiClient.setToken(response.token);
-      setUser(response);
+      completeAuthentication(response);
       showNotification(`Account verified! Welcome to BuildO, ${response.fullName}!`, 'success');
-      setActivePage('home');
     } catch (error) {
       showNotification(error.message || 'Authentication failed. Please verify your details.', 'error');
     } finally {
@@ -200,7 +198,7 @@ export default function LoginPage() {
       <header className="relative z-20 mx-auto flex w-full max-w-[1320px] items-center justify-between px-5 py-5 sm:px-8 lg:px-12">
         <button
           type="button"
-          onClick={() => setActivePage('home')}
+          onClick={() => navigateToPage('home')}
           className="inline-flex items-center text-left transition hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-[#d8ff43] focus:ring-offset-2 focus:ring-offset-[#10110d]"
           aria-label="Go to BuildO home"
         >
@@ -208,7 +206,7 @@ export default function LoginPage() {
         </button>
         <button
           type="button"
-          onClick={() => setActivePage('home')}
+          onClick={() => navigateToPage('home')}
           className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-white/80 transition hover:border-[#d8ff43]/60 hover:text-[#d8ff43] focus:outline-none focus:ring-2 focus:ring-[#d8ff43]"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
